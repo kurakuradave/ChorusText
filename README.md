@@ -1,0 +1,4 @@
+ChorusText
+==========
+
+Chorus Text Editor
