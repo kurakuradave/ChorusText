@@ -48,9 +48,9 @@ class CSlider {
 /* ============================================================
 =============================================================*/ 
 void CSlider::initialize() {
-  Serial.println( "setting _sliderPID to AUTOMATIC" );;
+  //Serial.println( "setting _sliderPID to AUTOMATIC" );;
   _sliderPID.SetMode(AUTOMATIC);
-  Serial.println( "DONE!" ); 
+  //Serial.println( "DONE!" ); 
 } // end initialize()
 
 
@@ -121,13 +121,13 @@ void CSlider::processTactile() {
 
   if( curSlot != oldSlot ) {
     _isSlotChanged = true;
-    Serial.println( _input ); // debu
+    //Serial.println( _input ); // debu
     String myType = "char";
     if( _sliderKind == 1 )
       myType = "line";
     else if( _sliderKind == 2 )
       myType = "word";
-    String msg = String( "{ read : { " + myType + " : " ) + String( curSlot ) + String( " } }" );
+    String msg = String( "{ \"read\" : { \"" + myType + "\" : " ) + String( curSlot ) + String( " } }" );
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
