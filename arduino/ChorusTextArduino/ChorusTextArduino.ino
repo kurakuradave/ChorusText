@@ -90,6 +90,7 @@ void CSlider::showStatus() {
 
 
 void CSlider::slideToTarget( int theValue ) {
+// this will assign a new target for the slider to move to, as well as set it in motion
   _setpoint = theValue;
   _input = toSlot( theValue );
   _inputOld = _input;
@@ -118,6 +119,11 @@ byte CSlider::getSlot() {
 
 
 void CSlider::processTactile() {
+// this is for handling changes to the knob's position that is caused by user tactile input / physically dragging the knob
+// it basically checks whether there's a change in knob's location
+// if yes, prepare a String message to send to the RPi
+// send it
+// then memorize knob's new position
   int curSlot = toSlot( _input );
   int oldSlot = toSlot( _inputOld );
 
@@ -268,10 +274,11 @@ void loop() {
 // line slider routines
 //=================
   lineSlider.readSliderValue();
-  if( lineSlider.getIsMoving() )  
+  if( lineSlider.getIsMoving() )  // this means that, in the current loop() cycle the slider is in motion - trying to complete its travel to the target position, which was set by slideToTarget() in a previous loop() cycle.
+// do not disrupt it, just let it finish running its course
     lineSlider.slide();
   else 
-    lineSlider.processTactile(); // only do this if slider has reached within target +/- pid error margin around target position
+    lineSlider.processTactile(); // only do this if slider has reached target +/- pid error margin around target position
   // below should be refactored and placed inside processTactile()
   if( lineSlider.getIsSlotChanged() ) {  // knob is now on a different slot
     // slide dependants to their 0th slot or initial position
