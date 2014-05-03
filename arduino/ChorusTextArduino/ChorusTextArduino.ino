@@ -16,10 +16,10 @@ class CSlider {
         bool _isMoving;                  // true if slider has not yet reached its target position +/- PID_ERROR_MARGIN 
         PID _sliderPID;
         byte _sliderKind;                // 1 = Line, 2 = Word, 3 = Char
-        bool _isSlotChanged;
+        bool _isSlotChanged;        // true if knob is resting on a different slot. A slider is divided into ten slots or regions each with an interval of 100, last slot has interval of 124, total of all slots is 1024 which is the full range of Arduino analog pin reading, and tied to full potentiometer track.
    
     public
-        // constructor
+        // constructor and instantiation value for private fields
         CSlider( byte sliderKind, int pin, int motorPort ) :
             _sliderKind( sliderKind ),
             _pin( pin ),
@@ -33,7 +33,7 @@ class CSlider {
             _setpoint( 850 ), 
             _output( 0 ),
             _sliderPID( &_input, &_output, &_setpoint,4,0.025,0.025, DIRECT )
-        {
+        { // leaving it blank here
         } 
         double _input, _inputOld, _setpoint, _output;
         void slideToTarget( int theValue );
@@ -53,6 +53,7 @@ class CSlider {
 
 /* ============================================================
 =============================================================*/ 
+
 void CSlider::initialize() {
   //Serial.println( "setting _sliderPID to AUTOMATIC" );;
   _sliderPID.SetMode(AUTOMATIC);
@@ -99,6 +100,7 @@ void CSlider::slideToTarget( int theValue ) {
 
 
 byte CSlider::toSlot( double theInput ) {
+//given a raw analog read value, determine which slot that slider is on and return the value 
   byte ret = floor( theInput / 100 );
   if( ret > 9 )
     ret = 9;
@@ -118,12 +120,6 @@ byte CSlider::getSlot() {
 void CSlider::processTactile() {
   int curSlot = toSlot( _input );
   int oldSlot = toSlot( _inputOld );
-  
-  // EXPERIMENTAL
-  //if( curSlot == 9 ) {
-  //    delay( 5000 );
-  //    slideToTarget( 150 );
-  //}
 
   if( curSlot != oldSlot ) {
     _isSlotChanged = true;
@@ -133,11 +129,13 @@ void CSlider::processTactile() {
       myType = "line";
     else if( _sliderKind == 2 )
       myType = "word";
+
+//prepare message to be sent via serial USB, to the raspberry pi
     String msg = String( "{ \"read\" : { \"" + myType + "\" : " ) + String( curSlot ) + String( " } }" );
+// send msg to RPi
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
-    //slideToTarget( ( curSlot * 100 ) + 50 );
   } 
   _inputOld = _input;
 } // end processTactile()
@@ -177,13 +175,9 @@ void CSlider::run() {
 // private methods
 
 void CSlider::readSliderValue(){
-  // if sliders are placed to slide from 0 to 1024 from left to right, use
-  //return( analogRead( _pin ) );
-
-  // otherwise use
   double rawInput = (1024 - analogRead( _pin ));
   if( abs( rawInput - _input ) > 10 )
-    _input = rawInput; // sensitivity
+    _input = rawInput; // sliding sensitivity
 } // end readSliderValue()
 
 
@@ -193,12 +187,13 @@ void CSlider::slide() {
 
     // correction for bidirectional movement
     if( _slideDirection == -1 ) {
-      _input = 1024-_input; 
+      _input = 1024-_input;  // mirror the target point
       //Serial.print( "========================" );
       //Serial.print( _input );
       //Serial.print( " " );
       //Serial.println( _setpoint );
     }
+
     if( _input - _setpoint > PID_ERROR_MARGIN ) {
       // overshot, reverse direction
       _input = 1024-_input;
@@ -233,35 +228,62 @@ void CSlider::slide() {
        
 
 /* ============================================================
+||   begin sketch                                             ||
 =============================================================*/ 
 
+// instantiate the 3 CSlider objects
 CSlider lineSlider( 1, 0, 1 );
 CSlider wordSlider( 2, 1, 2 );
 CSlider charSlider( 3, 2, 3 );
 
+
+
+
 void setup() {
   Serial.begin( 9600 );
+//must call initialize() to properly start the PID in each CSlider object
   lineSlider.initialize();
   wordSlider.initialize();
   charSlider.initialize();
-}
+} // end setup()
+
+
+
 
 void loop() {
-  // bad code here.. the intention is to move these into CSlider.run()
+  // bad code here.. the intention is to move these into CSlider.run() one day
+// TO Implement
+// the line CSlider would need reference to the word and char CSliders, 
+// coz line needs to be able to slide word and char back to 0th slot
+// ditto word CSlider need reference for char CSlider
+// but char CSlider doesn't need any reference
+
+//==================
+// first, do line slider routines
+// then, do word slider routines
+// last, do char slider routines
+//==================
+
+//=================
+// line slider routines
+//=================
   lineSlider.readSliderValue();
   if( lineSlider.getIsMoving() )  
     lineSlider.slide();
   else 
-    lineSlider.processTactile();
+    lineSlider.processTactile(); // only do this if slider has reached within target +/- pid error margin around target position
   // below should be refactored and placed inside processTactile()
-  if( lineSlider.getIsSlotChanged() ) {
-    // slide dependants to zero
+  if( lineSlider.getIsSlotChanged() ) {  // knob is now on a different slot
+    // slide dependants to their 0th slot or initial position
     if( wordSlider. getSlot() != 0 )
       wordSlider.slideToTarget( 50 );
     if( charSlider.getSlot() != 0 )
       charSlider.slideToTarget( 50 );
   }
 
+//==================
+// word slider routines
+//==================
   wordSlider.readSliderValue();
   if( wordSlider.getIsMoving() )  
     wordSlider.slide();
@@ -269,11 +291,15 @@ void loop() {
     wordSlider.processTactile();
   // below should be refactord to be inside processTactile()
   if( wordSlider.getIsSlotChanged() ) {
-    // slide dependants to zero
+    // slide dependants to their 0th slot
     if( charSlider.getSlot() != 0 )
       charSlider.slideToTarget( 50 );
   }
 
+
+//==================
+// char slider routines
+//==================
   charSlider.readSliderValue();
   if( charSlider.getIsMoving() )  
     charSlider.slide();
