@@ -1,19 +1,25 @@
 #include <PID_v1.h>
 #include <AFMotor.h>
 
+/*========================================================
+||  class for manipulating/contolling the sliders       ||
+||  instantiate one for each slider                     ||
+========================================================*/
+
 class CSlider {
  
   private:
-        int _pin;
-        const byte PID_ERROR_MARGIN;
-        AF_DCMotor _motor;
+        int _pin;                        // the pin number on the Arduino that this slider's pot is hooked up to
+        const byte PID_ERROR_MARGIN;     // tolerable overshoot or undershoot distance from the target
+        AF_DCMotor _motor;               // which motor port (1/2/3/4) on the Adafruit Motor Shield is this slider hooked up to
         int _slideDirection;
-        bool _isMoving;
+        bool _isMoving;                  // true if slider has not yet reached its target position +/- PID_ERROR_MARGIN 
         PID _sliderPID;
-        byte _sliderKind;    // 1 - Line, 2 - Word, 3 - Char
+        byte _sliderKind;                // 1 = Line, 2 = Word, 3 = Char
         bool _isSlotChanged;
    
-    public:
+    public
+        // constructor
         CSlider( byte sliderKind, int pin, int motorPort ) :
             _sliderKind( sliderKind ),
             _pin( pin ),
