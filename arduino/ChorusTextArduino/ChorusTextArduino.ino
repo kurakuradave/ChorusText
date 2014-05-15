@@ -1,7 +1,7 @@
 /*=========================================\\
 || For use with Adafruit Motor Shield v2   ||
 || For wiring on the shield, please refer ||
-|| to the Fritzing diagram                ||
+|| to /hardware/simple_wiring.xls file.   ||
 \\========================================*/
 
 #include <Wire.h>
@@ -10,17 +10,23 @@
 #include "utility/Adafruit_PWMServoDriver.h"
 #include <PID_v1.h>
 
+/*========================================================
+||  class for manipulating/contolling the sliders       ||
+||  instantiate one for each slider                     ||
+========================================================*/
+
 class CSlider {
  
   private:
-        int _pin;
-        const byte PID_ERROR_MARGIN;
-        Adafruit_DCMotor *_motor;
+        int _pin;                     // the pin number on the Arduino that this slider's pot is hooked up to
+        const byte PID_ERROR_MARGIN;  // tolerable overshoot or undershoot distance from the target
+        Adafruit_DCMotor *_motor;     // which motor port (1/2/3/4) on the Adafruit Motor Shield is this slider hooked up to
+             
         int _slideDirection;
-        bool _isMoving;
+        bool _isMoving;               // true if slider has not yet reached its target position +/- PID_ERROR_MARGIN 
         PID _sliderPID;
-        byte _sliderKind;    // 1 - Line, 2 - Word, 3 - Char
-        bool _isSlotChanged;
+        byte _sliderKind;             // 1 = Line, 2 = Word, 3 = Char
+        bool _isSlotChanged;          // true if knob is resting on a different slot. A slider is divided into ten slots or regions each with an interval of 100, last slot has interval of 124, total of all slots is 1024 which is the full range of Arduino analog pin reading, and tied to full potentiometer track.
    
     public:
         CSlider( byte sliderKind, int pin, Adafruit_DCMotor *motorAddress ) :
@@ -57,10 +63,11 @@ class CSlider {
 /*============================================================\\
 ||   Implementation of the methods in class CSlider           ||
 \\============================================================*/ 
+
 void CSlider::initialize() {
-  Serial.println( "setting _sliderPID to AUTOMATIC" );;
+  //Serial.println( "setting _sliderPID to AUTOMATIC" );;
   _sliderPID.SetMode(AUTOMATIC);
-  Serial.println( "DONE!" ); 
+  //Serial.println( "DONE!" ); 
 } // end initialize()
 
 
@@ -93,6 +100,7 @@ void CSlider::showStatus() {
 
 
 void CSlider::slideToTarget( int theValue ) {
+// this will assign a new target for the slider to move to, as well as set it in motion
   _setpoint = theValue;
   _input = toSlot( theValue );
   _inputOld = _input;
@@ -103,6 +111,7 @@ void CSlider::slideToTarget( int theValue ) {
 
 
 byte CSlider::toSlot( double theInput ) {
+//given a raw analog read value, determine which slot that slider is on and return the value 
   byte ret = floor( theInput / 100 );
   if( ret > 9 )
     ret = 9;
@@ -120,7 +129,11 @@ byte CSlider::getSlot() {
 
 
 void CSlider::processTactile() {
-// process tactile input from user physically moved the slider
+// this is for handling changes to the knob's position that is caused by user tactile input / physically dragging the knob
+// it basically checks whether there's a change in knob's location
+// if yes, prepare a String message to send to the RPi
+// send it
+// then memorize knob's new position
   int curSlot = toSlot( _input );
   int oldSlot = toSlot( _inputOld );
 
@@ -192,6 +205,7 @@ void CSlider::slide() {
     if( _slideDirection == -1 ) {
       _input = 1024-_input; 
     }
+
     if( _input - _setpoint > PID_ERROR_MARGIN ) {
       // overshot, reverse direction
       _input = 1024-_input;
@@ -228,6 +242,7 @@ void CSlider::slide() {
 } // end slide()
        
 
+
 /*============================================================\\
 ||   Arduino sketch                                           ||
 \\============================================================*/ 
@@ -261,21 +276,40 @@ void setup() {
 void loop() {
   uint8_t i;
 
-  // bad code here.. the intention is to move these into CSlider.run()
+  // bad code here.. the intention is to move these into CSlider.run() one day
+// TO Implement
+// the line CSlider would need reference to the word and char CSliders, 
+// coz line needs to be able to slide word and char back to 0th slot
+// ditto word CSlider need reference for char CSlider
+// but char CSlider doesn't need any reference
+
+//==================
+// first, do line slider routines
+// then, do word slider routines
+// last, do char slider routines
+//==================
+
+//=================
+// line slider routines
+//=================
   lineSlider.readSliderValue();
-  if( lineSlider.getIsMoving() )  
+  if( lineSlider.getIsMoving() )  // this means that, in the current loop() cycle the slider is in motion - trying to complete its travel to the target position, which was set by slideToTarget() in a previous loop() cycle.
+// do not disrupt it, just let it finish running its course
     lineSlider.slide();
   else 
-    lineSlider.processTactile();
+    lineSlider.processTactile(); // only do this if slider has reached target +/- pid error margin around target position
   // below should be refactored and placed inside processTactile()
-  if( lineSlider.getIsSlotChanged() ) {
-    // slide dependants to zero
+  if( lineSlider.getIsSlotChanged() ) {  // knob is now on a different slot
+    // slide dependants to their 0th slot or initial position
     if( wordSlider. getSlot() != 0 )
       wordSlider.slideToTarget( 50 );
     if( charSlider.getSlot() != 0 )
       charSlider.slideToTarget( 50 );
   }
 
+//==================
+// word slider routines
+//==================
   wordSlider.readSliderValue();
   if( wordSlider.getIsMoving() )  
     wordSlider.slide();
@@ -283,11 +317,15 @@ void loop() {
     wordSlider.processTactile();
   // below should be refactord to be inside processTactile()
   if( wordSlider.getIsSlotChanged() ) {
-    // slide dependants to zero
+    // slide dependants to their 0th slot
     if( charSlider.getSlot() != 0 )
       charSlider.slideToTarget( 50 );
   }
 
+
+//==================
+// char slider routines
+//==================
   charSlider.readSliderValue();
   if( charSlider.getIsMoving() )  
     charSlider.slide();
