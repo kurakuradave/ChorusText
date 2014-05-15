@@ -229,7 +229,7 @@ void CSlider::slide() {
        
 
 /*============================================================\\
-||   Arduino sketch                                           ||
+\\   Arduino sketch                                           ||
 \\============================================================*/ 
 
 // create the shield instance and get the motor pointer addresses

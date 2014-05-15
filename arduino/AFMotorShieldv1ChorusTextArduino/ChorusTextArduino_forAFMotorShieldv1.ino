@@ -1,21 +1,12 @@
-/*=========================================\\
-|| For use with Adafruit Motor Shield v2   ||
-|| For wiring on the shield, please refer ||
-|| to the Fritzing diagram                ||
-\\========================================*/
-
-#include <Wire.h>
 #include <PID_v1.h>
-#include <Adafruit_MotorShield.h>
-#include "utility/Adafruit_PWMServoDriver.h"
-#include <PID_v1.h>
+#include <AFMotor.h>
 
 class CSlider {
  
   private:
         int _pin;
         const byte PID_ERROR_MARGIN;
-        Adafruit_DCMotor *_motor;
+        AF_DCMotor _motor;
         int _slideDirection;
         bool _isMoving;
         PID _sliderPID;
@@ -23,19 +14,19 @@ class CSlider {
         bool _isSlotChanged;
    
     public:
-        CSlider( byte sliderKind, int pin, Adafruit_DCMotor *motorAddress ) :
+        CSlider( byte sliderKind, int pin, int motorPort ) :
             _sliderKind( sliderKind ),
             _pin( pin ),
-            PID_ERROR_MARGIN( 15 ),
-            _motor( motorAddress ),
+            PID_ERROR_MARGIN( 25 ),
+            _motor( motorPort ),
             _slideDirection( 1 ),
             _isMoving( true ),
             _isSlotChanged( false ),
             _input( 0 ), 
             _inputOld( 0 ), 
-            _setpoint( 50 ), 
+            _setpoint( 850 ), 
             _output( 0 ),
-            _sliderPID( &_input, &_output, &_setpoint,2,0.025,0.25, DIRECT )
+            _sliderPID( &_input, &_output, &_setpoint,4,0.025,0.025, DIRECT )
         {
         } 
         double _input, _inputOld, _setpoint, _output;
@@ -54,9 +45,8 @@ class CSlider {
     
 }; // end class header CSlider
 
-/*============================================================\\
-||   Implementation of the methods in class CSlider           ||
-\\============================================================*/ 
+/* ============================================================
+=============================================================*/ 
 void CSlider::initialize() {
   Serial.println( "setting _sliderPID to AUTOMATIC" );;
   _sliderPID.SetMode(AUTOMATIC);
@@ -87,7 +77,7 @@ void CSlider::showStatus() {
    Serial.println( _inputOld );
    Serial.println(  _setpoint );
    Serial.println(  _output );
-} // end showStatus()
+}
 
 
 
@@ -120,21 +110,28 @@ byte CSlider::getSlot() {
 
 
 void CSlider::processTactile() {
-// process tactile input from user physically moved the slider
   int curSlot = toSlot( _input );
   int oldSlot = toSlot( _inputOld );
+  
+  // EXPERIMENTAL
+  //if( curSlot == 9 ) {
+  //    delay( 5000 );
+  //    slideToTarget( 150 );
+  //}
 
   if( curSlot != oldSlot ) {
     _isSlotChanged = true;
+    Serial.println( _input ); // debu
     String myType = "char";
     if( _sliderKind == 1 )
       myType = "line";
     else if( _sliderKind == 2 )
       myType = "word";
-    String msg = String( "{ \"read\" : { \"" + myType + "\" : \"" ) + String( curSlot ) + String( "\" } }" );
+    String msg = String( "{ read : { " + myType + " : " ) + String( curSlot ) + String( " } }" );
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
+    //slideToTarget( ( curSlot * 100 ) + 50 );
   } 
   _inputOld = _input;
 } // end processTactile()
@@ -174,13 +171,13 @@ void CSlider::run() {
 // private methods
 
 void CSlider::readSliderValue(){
-  // if sliders are placed to slide from 0 to 1024 from left to right OR up to down, use
+  // if sliders are placed to slide from 0 to 1024 from left to right, use
   //return( analogRead( _pin ) );
 
   // otherwise use
   double rawInput = (1024 - analogRead( _pin ));
-  if( abs( rawInput - _input ) > 5 ) // filter out noise from very slight changes
-    _input = rawInput; 
+  if( abs( rawInput - _input ) > 10 )
+    _input = rawInput; // sensitivity
 } // end readSliderValue()
 
 
@@ -191,76 +188,59 @@ void CSlider::slide() {
     // correction for bidirectional movement
     if( _slideDirection == -1 ) {
       _input = 1024-_input; 
+      //Serial.print( "========================" );
+      //Serial.print( _input );
+      //Serial.print( " " );
+      //Serial.println( _setpoint );
     }
     if( _input - _setpoint > PID_ERROR_MARGIN ) {
       // overshot, reverse direction
       _input = 1024-_input;
       _setpoint = 1024-_setpoint;
       _slideDirection = -1 * _slideDirection;
+      Serial.print( ">>>>>>>>reversing direction!<<<<" );
+      if( _sliderKind == 1 ) Serial.println( " LINE" );
+      else if( _sliderKind == 2 ) Serial.println( "WORD" );
+      else Serial.println( "CHAR" );
     }
 
     if( abs( _input - _setpoint ) > PID_ERROR_MARGIN ) { // target not yet reached
       _sliderPID.Compute();
-      if( _output > 180 )    // upper cap to sliding speed
-        _output = 180;
-      if( _output > 80 ) {   // lower cap ( these need tweaking to get right )
-        _motor->setSpeed( _output );
+      if( _output > 0 ) {
+        _motor.setSpeed( _output );
         if( _slideDirection == -1 ) {
-          _motor->run( BACKWARD ); // reverse wiring on the motor shield if it slide to wrong direction
+          _motor.run( BACKWARD ); 
         } 
         else { 
-          _motor->run( FORWARD ); 
+          _motor.run( FORWARD ); 
         }
         delay( 10 );
-        _motor->run(RELEASE );
+        _motor.run(RELEASE );
       }
     } 
     else { // target reached
       _isMoving = false;
-      if( _slideDirection == -1 ) { // if stopping after a -1 dir, then normalize
-        _setpoint = 1024 - _setpoint;  
-        _input = 1024 - _input;
-      }
       _slideDirection = 1;
-      //showStatus();    // uncomment to check stuff
     }
 
 } // end slide()
        
 
-/*============================================================\\
-||   Arduino sketch                                           ||
-\\============================================================*/ 
+/* ============================================================
+=============================================================*/ 
 
-// create the shield instance and get the motor pointer addresses
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
-Adafruit_DCMotor *lMotor = AFMS.getMotor(1);
-Adafruit_DCMotor *wMotor = AFMS.getMotor(2);
-Adafruit_DCMotor *cMotor = AFMS.getMotor(3);
-
-// create CSlider objects
-CSlider lineSlider( 1, 0, lMotor );
-CSlider wordSlider( 2, 1, wMotor );
-CSlider charSlider( 3, 2, cMotor );
-
-
-
+CSlider lineSlider( 1, 0, 1 );
+CSlider wordSlider( 2, 1, 2 );
+CSlider charSlider( 3, 2, 3 );
 
 void setup() {
   Serial.begin( 9600 );
-  // must have these:
-  AFMS.begin();
   lineSlider.initialize();
   wordSlider.initialize();
   charSlider.initialize();
-} // end setup()
-
-
-
+}
 
 void loop() {
-  uint8_t i;
-
   // bad code here.. the intention is to move these into CSlider.run()
   lineSlider.readSliderValue();
   if( lineSlider.getIsMoving() )  
