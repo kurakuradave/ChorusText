@@ -11,7 +11,7 @@
 #include <PID_v1.h>
 
 /*========================================================
-||  class for manipulating/contolling the sliders       ||
+||  class for manipulating/controlling the sliders      ||
 ||  instantiate one for each slider                     ||
 ========================================================*/
 
@@ -243,6 +243,209 @@ void CSlider::slide() {
        
 
 
+/*========================================================
+||  class for manipulating/controlling the dial         |
+========================================================*/
+
+class CDial {
+ 
+  private:
+        int _pin;                     // the pin number on the Arduino that this dial's pot is hooked up to
+        const byte PID_ERROR_MARGIN;  // tolerable overshoot or undershoot distance from the target
+        Adafruit_DCMotor *_motor;     // which motor port (1/2/3/4) on the Adafruit Motor Shield is this dial hooked up to
+             
+        int _rotateDirection;
+        bool _isMoving;               // true if dial has not yet reached its target position +/- PID_ERROR_MARGIN 
+        PID _dialPID;
+        bool _isSlotChanged;          // true if dial is pointing on a different slot. A dial is divided into five slots or regions each with an interval of 200, last slot has interval of 224, total of all slots is 1024 which is the full range of Arduino analog pin reading, and tied to full potentiometer track.
+   
+    public:
+        CDial( int pin, Adafruit_DCMotor *motorAddress ) :
+            _pin( pin ),
+            PID_ERROR_MARGIN( 15 ),
+            _motor( motorAddress ),
+            _rotateDirection( 1 ),
+            _isMoving( true ),
+            _isSlotChanged( false ),
+            _input( 512 ), 
+            _inputOld( 512 ), 
+            _setpoint( 512 ), 
+            _output( 0 ),
+            _dialPID( &_input, &_output, &_setpoint,2,0.025,0.25, DIRECT )
+        {
+        } 
+        double _input, _inputOld, _setpoint, _output;
+        void rotateToTarget( int theValue );
+        byte toSlot( double theInput );
+        byte getSlot();
+        void processTactile();
+        void run();
+        void showStatus();
+        void initialize();
+        void readDialValue();
+        bool getIsMoving();
+        bool getIsSlotChanged();
+        void rotate();        
+
+    
+}; // end class header CDial
+
+/*============================================================\\
+||   Implementation of the methods in class CDial             ||
+\\============================================================*/ 
+
+void CDial::initialize() {
+  //Serial.println( "setting _dialPID to AUTOMATIC" );;
+  _dialPID.SetMode(AUTOMATIC);
+  //Serial.println( "DONE!" ); 
+} // end initialize()
+
+
+
+
+void CDial::showStatus() {
+   Serial.print( "I am a DIAL " );
+   Serial.print( "_pin is: " ); 
+   Serial.println( _pin );
+   Serial.print( "PID_ERRO_MARGIN is: " );
+   Serial.println( PID_ERROR_MARGIN );
+   Serial.print( "_rotateDirection is: " );
+   Serial.println( _rotateDirection );
+   Serial.print( "_isMoving is: " );
+   Serial.println( _isMoving );
+   Serial.println( "_input, _inputOld, _setpoint and _output are: " );
+   Serial.println( _input ); 
+   Serial.println( _inputOld );
+   Serial.println(  _setpoint );
+   Serial.println(  _output );
+} // end showStatus()
+
+
+
+
+void CDial::rotateToTarget( int theValue ) {
+// this will assign a new target for the dial to move to, as well as set it in motion
+  _setpoint = theValue;
+  _input = toSlot( theValue );
+  _inputOld = _input;
+  _isMoving = true;
+} // end rotateToTarget()
+
+
+
+
+byte CDial::toSlot( double theInput ) {
+//given a raw analog read value, determine which slot that dial is on and return the value 
+  byte ret = floor( theInput / 200 );
+  if( ret > 4 )
+    ret = 4;
+  return ret;
+} // end toSlot()
+
+
+
+
+byte CDial::getSlot() {
+  return toSlot( _input );
+} // end getSlot()
+
+
+
+
+void CDial::processTactile() {
+// this is for handling changes to the knob's position that is caused by user tactile input / physically rotating the knob
+// it basically checks whether there's a change in knob's location
+// if yes, prepare a String message to send to the RPi
+// send it
+// then memorize knob's new position
+  int curSlot = toSlot( _input );
+  int oldSlot = toSlot( _inputOld );
+
+  if( curSlot != oldSlot ) {
+    _isSlotChanged = true;
+    String myType = "dial";
+    String msg = String( "{ \"turn\" : { \"" + myType + "\" : \"" ) + String( curSlot ) + String( "\" } }" );
+    Serial.println( msg ); 
+  } else {
+    _isSlotChanged = false;
+  } 
+  _inputOld = _input;
+} // end processTactile()
+
+
+
+
+bool CDial::getIsMoving() {
+  return _isMoving;
+} // end getIsMoving()
+
+
+
+
+bool CDial::getIsSlotChanged() {
+  return _isSlotChanged;
+} // end getIsSlotChanged()
+
+
+
+
+// private methods
+
+void CDial::readDialValue(){
+  // if dial is placed to rotate from 0 to 1024 counter clockwise, use
+  //return( analogRead( _pin ) );
+
+  // otherwise use
+  double rawInput = (1024 - analogRead( _pin ));
+  if( abs( rawInput - _input ) > 5 ) // filter out noise from very slight changes
+    _input = rawInput; 
+} // end readSliderValue()
+
+
+
+
+void CDial::rotate() {
+    // correction for bidirectional movement
+    if( _rotateDirection == -1 ) {
+      _input = 1024-_input; 
+    }
+
+    if( _input - _setpoint > PID_ERROR_MARGIN ) {
+      // overshot, reverse direction
+      _input = 1024-_input;
+      _setpoint = 1024-_setpoint;
+      _rotateDirection = -1 * _rotateDirection;
+    }
+
+    if( abs( _input - _setpoint ) > PID_ERROR_MARGIN ) { // target not yet reached
+      _dialPID.Compute();
+      // no upper cap set for speed
+      if( _output > 0 ) {   // lower cap ( these need tweaking to get right )
+        _motor->setSpeed( _output );
+        if( _rotateDirection == -1 ) {
+          _motor->run( BACKWARD ); // reverse wiring on the motor shield if it slide to wrong direction
+        } 
+        else { 
+          _motor->run( FORWARD ); 
+        }
+        delay( 10 );
+        _motor->run(RELEASE );
+      }
+    } 
+    else { // target reached
+      _isMoving = false;
+      if( _rotateDirection == -1 ) { // if stopping after a -1 dir, then normalize
+        _setpoint = 1024 - _setpoint;  
+        _input = 1024 - _input;
+      }
+      _rotateDirection = 1;
+      //showStatus();    // uncomment to check stuff
+    }
+
+} // end rotate()
+       
+
+
 /*============================================================\\
 ||   Arduino sketch                                           ||
 \\============================================================*/ 
@@ -252,11 +455,15 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *lMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *wMotor = AFMS.getMotor(2);
 Adafruit_DCMotor *cMotor = AFMS.getMotor(3);
+Adafruit_DCMotor *rMotor = AFMS.getMotor(4);
 
 // create CSlider objects
 CSlider lineSlider( 1, 0, lMotor );
 CSlider wordSlider( 2, 1, wMotor );
 CSlider charSlider( 3, 2, cMotor );
+
+// create CDial object
+CDial rotDial( 3, rMotor );
 
 
 
@@ -268,6 +475,7 @@ void setup() {
   lineSlider.initialize();
   wordSlider.initialize();
   charSlider.initialize();
+  rotDial.initialize();
 } // end setup()
 
 
@@ -275,6 +483,12 @@ void setup() {
 
 void loop() {
   uint8_t i;
+  
+  rotDial.readDialValue();
+  if( rotDial.getIsMoving() )  
+    rotDial.rotate();
+  else
+    rotDial.processTactile();
 
   // bad code here.. the intention is to move these into CSlider.run() one day
 // TO Implement
