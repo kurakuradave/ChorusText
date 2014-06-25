@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    
+        link(rel='stylesheet', href='/javascripts/bootstrap-3.1.1-dist/css/bootstrap.css')
+        script(type='text/javascript', src='javascripts/jquery-2.1.1.min.js')
+        script(type='text/javascript', src='javascripts/bootstrap-3.1.1-dist/js/bootstrap.min.js')
+        script(type='text/javascript', src='javascripts/angular.js')
+
+        .navbar.navbar-inverse.navbar-fixed-top
+            .navbar-header
+                a.navbar-brand(href="/") 
+                    |ChorusText on Raspberry Pi
+            ul.nav.navbar-nav.navbar-left
+                li.active
+                    a(href="/import")
+                        span.glyphicon.glyphicon-import
+                        |    Import
+                li.active 
+                    a(href="/read")
+                        span.glyphicon.glyphicon-eye-open
+                        |    Read
+            ul.nav.navbar-nav.navbar-right
+                li.active 
+                    a(href="/guide")
+                        span.glyphicon.glyphicon-question-sign
+                        |    Help
+                li.active 
+                    a(href="/about")
+                        span.glyphicon.glyphicon-info-sign
+                        |    About
+            
+
+  body
+    block content

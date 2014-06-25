@@ -1,0 +1,11 @@
+    div.row
+      p To import some text into your ChorusTextBoard, simply drop the text, either via Copy-Paste or typing, into the box below and then click the "Upload" button.
+
+      div.Content.container( ng-app='' )
+        div.ImportContainer.container
+          textarea.row( rows=15 )
+            |put some text here, and then click Import"
+          input.row( class="btn-primary" 
+                 type="submit" 
+                 value="Import"
+          )

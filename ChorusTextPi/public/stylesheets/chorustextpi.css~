@@ -1,0 +1,19 @@
+.textblock {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.launcher {
+  padding: 40px;
+}
+
+.stark {
+  text-align: center;
+  border:1px solid;
+  border-radius:15px;
+}
+
+
+
+
+

@@ -1,0 +1,9 @@
+{
+  "name": "ChorusText-Node-Client",
+  "description": "RaspberryPi ChorusText Application",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "4.4.4"
+  }
+}
