@@ -1,0 +1,15 @@
+extends layout
+
+
+block content
+
+  link(rel='stylesheet', href='/stylesheets/chorustextpi.css')
+
+  div.textblock.container( ng-controller='ReadCtrl' )
+    h1=title
+      div.textspace
+        ol
+          li( ng-repeat="line in lines", ng-bind-html="line.text" )
+            {{line.text}} 
+
+ 

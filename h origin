@@ -1,0 +1,110 @@
+commit 96a80a17961732b66d399ad7f7c7fa327be7cd3a
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Wed Jun 25 18:08:59 2014 +0800
+
+    Added basic Bootstrap, Express, Angular and Socket.IO to the Node-Client software
+
+commit ea52f8168886a70aa89b493e9c360826f36b7bc6
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Tue Jun 3 14:48:46 2014 +0800
+
+    Added arduino code for controlling rotary dial
+
+commit 7642b891a8b720ac183457026b9a3f61782f1f72
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Thu May 29 15:35:35 2014 +0800
+
+    Fixed screw holes accidentally went off alignment on the Frame center piece
+
+commit 03fa5e17519fe2cba5c57a834ac7411d8dd79877
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Thu May 29 11:46:45 2014 +0800
+
+    updated ChorusTextBoard.svg and .eps to have same slot width with the modularized version
+
+commit beb99af0597a959172952b5c2f526a7b330364a4
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Tue May 27 11:40:22 2014 +0800
+
+    Added modularized version for the laser cut board
+
+commit 9a4e38c50a3c92dc2fb257a1e19d453cfb4f4111
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Fri May 16 12:40:22 2014 +0800
+
+    ChorusTextBoard .svg and .eps - added anchoring hole for the rotary pot
+
+commit 87c4a320421d497540de2fce6027df28b7a88941
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Fri May 16 11:58:59 2014 +0800
+
+    ChorusTextBoard .svg and .eps - shifted buttons for the rotary pot 15 mm lower to make some space for the user's finger
+
+commit 1e08cbd04dab0dae26fa8b97cc65a3f3cc08a24a
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Thu May 15 17:08:04 2014 +0800
+
+    added design files for laser cutting the board
+
+commit a780dbb6d4803175a050235653845b25c91cf3db
+Merge: 5a03a11 ac9ef75
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Thu May 15 17:02:07 2014 +0800
+
+    added datasheets for motorized linear and rotary pots
+    
+    added simple table that describes how the pots should be wired to the arduino
+
+commit 5a03a112fb0a92454948f9b303d8f5fe790aa46e
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Thu May 15 12:29:15 2014 +0800
+
+    Tweaked Arduino code to support Adafruit Motor Shield v2
+
+commit ac9ef755661b9701a7f3cf4d57076a8e6183fde0
+Author: kurakuradave <kurakuradave@gmail.com>
+Date:   Sat May 3 22:19:12 2014 +0800
+
+    Yet some more comments - forgot to type in some stuff earlier -May have typo, not sure if this compilesI need to check this
+
+commit dd3ba1165a23674e954b425f808e72e8ecdff2a4
+Author: kurakuradave <kurakuradave@gmail.com>
+Date:   Sat May 3 21:37:41 2014 +0800
+
+    Some more comments on Arduino code
+
+commit dca719a0d40962f1a6cecab13932aebb0374b7d7
+Author: kurakuradave <kurakuradave@gmail.com>
+Date:   Sat May 3 11:22:20 2014 +0800
+
+    Added comments
+
+commit d6a9009bb3448307b6ac31e25ac17ba42ce37a4d
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Sun Mar 9 10:43:58 2014 +0800
+
+    Added node-client code
+
+commit d38ac6399b70fe902e65fafce41b352947932783
+Author: David Li <david@dMint.(none)>
+Date:   Mon Mar 3 13:20:04 2014 +0800
+
+    fixed JSON output from Arduino
+
+commit 78149cfc6e4670e25c2a486a8db68fb73e39303d
+Author: KuraKuraDave <kurakuradave@gmail.com>
+Date:   Thu Feb 27 17:06:47 2014 +0800
+
+    Initial commit
+
+commit df6a4e287173b619e12b61716f6e90a1ece97fbb
+Author: kurakuradave <kurakuradave@gmail.com>
+Date:   Thu Feb 27 16:58:29 2014 +0800
+
+    Update README.md
+
+commit 7316bfe84bdc159939ec3464e8470cc7da0a33a5
+Author: kurakuradave <kurakuradave@gmail.com>
+Date:   Thu Feb 27 00:52:26 2014 -0800
+
+    Initial commit

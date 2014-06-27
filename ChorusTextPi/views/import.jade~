@@ -3,6 +3,7 @@ extends layout
 block content
 
   link(rel='stylesheet', href='/stylesheets/chorustextpi.css')
+  script( type='text/javascript', src='/javascripts/import.js' )
 
   div.textblock.container( ng-controller='ImportCtrl' )
     h1=title

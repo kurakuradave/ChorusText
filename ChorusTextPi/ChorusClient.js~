@@ -79,20 +79,17 @@ app.use(function(err, req, res, next) {
 // Socket.io application logic
 // ==================================================
 
-var importedRawText = "";
-
 io.on('connection', function(socket){
   console.log('a user connected');
 
   socket.on( 'importText', function( itObj ) {
     console.log( "<<<<<<<<<< Received new text: " );
     console.log( itObj.rawText );
-    importedRawText = itObj.rawText;
-    cs.say( importedRawText );
+    cs.say( itObj.rawText );
   } );
 
   socket.on( 'initForRead', function( data ) {  
-    socket.emit( 'initForRead', { 'rawText': importedRawText } );
+    socket.emit( 'initForRead',  );
   } );
 
 });

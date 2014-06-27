@@ -1,11 +1,16 @@
 doctype html
-html
+html( ng-app='ctpiapp' )
   head
     
         link(rel='stylesheet', href='/javascripts/bootstrap-3.1.1-dist/css/bootstrap.css')
         script(type='text/javascript', src='javascripts/jquery-2.1.1.min.js')
         script(type='text/javascript', src='javascripts/bootstrap-3.1.1-dist/js/bootstrap.min.js')
         script(type='text/javascript', src='javascripts/angular.js')
+        script(type='text/javascript', src='javascripts/angular-sanitize.js')
+        script( type='text/javascript', src='/socket.io/socket.io.js' )        
+        script( type='text/javascript', src='javascripts/ctdirective.js' )        
+        script( type='text/javascript', src='javascripts/ctpiapp.js' )        
+
 
         .navbar.navbar-fixed-top
             .navbar-header
@@ -20,9 +25,13 @@ html
                     a(href="/read")
                         span.glyphicon.glyphicon-eye-open
                         |    Read
+                li.active
+                    a(href="/settings")
+                      span.glyphicon.glyphicon-wrench
+                      |    Settings
             ul.nav.navbar-nav.navbar-right
                 li.active 
-                    a(href="/guide")
+                    a(href="/help")
                         span.glyphicon.glyphicon-question-sign
                         |    Help
                 li.active 
@@ -32,4 +41,6 @@ html
             
 
   body
+    script.
+        var socket = io()
     block content
