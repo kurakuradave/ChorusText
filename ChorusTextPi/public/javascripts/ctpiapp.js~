@@ -17,7 +17,9 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
     } ) // end controller( 'ImportCtrl' )
 
     .controller( 'ReadCtrl', function( $scope ) {  
-        $scope.lines = [ {"text":"try"}, {"text":"it"}, {'text':'baby'} ];
+        $scope.lines = [];
+        $scope.renderLines = [];
+        $scope.cursor = {};
 
         $scope.render = function(e) {
             return $(e).html();
@@ -29,43 +31,97 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
             socket.emit( 'importText', { 'rawText': $scope.rawText } );
         };
 
+        $scope.clone = function(obj) {
+            // Handle the 3 simple types, and null or undefined
+            if (null == obj || "object" != typeof obj) return obj;
+
+            // Handle Date
+            if (obj instanceof Date) {
+                var copy = new Date();
+                copy.setTime(obj.getTime());
+                return copy;
+            }
+
+            // Handle Array
+            if (obj instanceof Array) {
+                var copy = [];
+                for (var i = 0, len = obj.length; i < len; i++) {
+                    copy[i] = $scope.clone(obj[i]);
+                }
+                return copy;
+            }
+
+            // Handle Object
+            if (obj instanceof Object) {
+                var copy = {};
+                for (var attr in obj) {
+                    if (obj.hasOwnProperty(attr)) copy[attr] = $scope.clone(obj[attr]);
+                }
+                return copy;
+            }
+
+            throw new Error("Unable to copy obj! Its type isn't supported.");
+        }
+
+
+
+
         socket.on( 'initForRead', function( ifrObj ) {  
             $scope.$apply( function() {
-                $scope.lines = [];
-                var tempLines = ifrObj.rawText.split( '\n' );
-                
-                var focusedLine = 0;
-                var focusedWord = 0;
-                var focusedChar = 0;
+                $scope.lines = ifrObj.lines;
+                $scope.cursor = ifrObj.cursor;
+                console.log( $scope.cursor );
+   
+                var focusedLine= $scope.cursor.line;
+                var focusedWord = $scope.cursor.word;
+                var focusedChar = $scope.cursor.char;
 
-                // get the focused lwc
-                var newLine = tempLines[ focusedLine ];
-                var tempWords = newLine.split( " " );
-                var newWord = tempWords[ focusedWord ];
-                var newChar = newWord.slice( focusedChar, focusedChar + 1 );
+                // get the focused lwc object
+                $scope.newLine = {};
 
-                // inject new lwc
-                newChar = "<span class='focusc'>" + newChar + "</span>";
-                newWord = newWord.slice( 0, focusedChar) + newChar + newWord.slice( focusedChar + 1, newWord.length );
+                if( focusedLine >= 0 ) {
+                    $scope.newLine = $scope.clone( $scope.lines[ focusedLine ] );
+                    console.log( "check clone: " );
+                    console.log( $scope.newLine );
+                    
+                    // inject highlighting text on focused lwc
+                    console.log( "focusedChar is: " + focusedChar  );
+                    if( focusedChar >= 0 ) {
+                        if( focusedWord >= 0 ) {
+                            console.log( "injecting newChar" );
+                            newCharText = $scope.newLine.words[ focusedWord ].chars[ focusedChar ].text;
+                            newCharText = "<span class='focusc'>"+ newCharText + "</span>";
+                        }
+                        $scope.newLine.words[ focusedWord ].chars[ focusedChar ].text = newCharText;
+                    }
+            
+                    if( focusedWord >= 0 ) {
+                        newCharWordText = "<span class='focusw'>";
+                        for( var i = 0; i < $scope.newLine.words[ focusedWord ].chars.length; i++ ) {
+                            newCharWordText += $scope.newLine.words[focusedWord].chars[ i ].text;
+                        }
+                        newCharWordText += "</span>";
+                        $scope.newLine.words[ focusedWord ].text = newCharWordText;
+                    }
 
-                newWord = "<span class='focusw'>" + newWord + "</span>";
-                tempWords[ focusedWord ] = newWord;
-                tempLine = "";
-                for( i=0; i<tempWords.length; i++ ) {
-                    tempLine += tempWords[ i ] + " ";
+                    var newCharWordLineText = "<span class='focusl'><strong>";
+                    for( var j = 0; j < $scope.newLine.words.length; j++ ) {
+                        newCharWordLineText += $scope.newLine.words[ j ].text + " ";
+                    }
+                    newCharWordLineText.substring( newCharWordLineText.length - 2 );
+                    newCharWordLineText += "</strong></span>";
+                    $scope.newLine.text = newCharWordLineText;
+                }
+ 
+                // update renderLines
+                for( var i = 0; i < $scope.lines.length; i ++ ) {
+                    if( i == focusedLine ) {
+                        $scope.renderLines[ i ] = $scope.newLine;
+                    } else {
+                        $scope.renderLines[ i ] $scope.lines[ i ];
+                    }
                 }
 
-                newLine = "<span class='focusl'><strong>" + tempLine + "</strong></span>";
-                tempLines[ focusedLine ] = newLine;
-                
-
-                tempLines.forEach( function( i ) {  
-                    var tempL = { 'text' : i };
-                    $scope.lines.push( tempL );    
-                } );
-
-                console.log( 'rawText split, total lines: ' + $scope.lines.length );
-                console.log( $scope.lines );
             } );
         } );
 

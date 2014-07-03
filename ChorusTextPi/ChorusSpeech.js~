@@ -32,7 +32,7 @@ var setLanguage = function( val ) {
 
 
 
-var say = function( theText, withPunctuation ) {
+var say = function( theText ) {
     // kill all ongoing speeches
     if( speechPID ) {
         this.killSpeech( speechPID );
@@ -40,11 +40,8 @@ var say = function( theText, withPunctuation ) {
     
     // spawn espeak
     speechText = theText;
-    if( withPunctuation )
-        espeak = spawn( 'espeak', [ '--punct', '-s'+speechRate, '-v'+language, speechText ] );
-    else
-        espeak = spawn( 'espeak', [ '-s'+speechRate, '-v'+language, speechText ] );    
-
+    espeak = spawn( 'espeak', [ '-s'+speechRate, '-v'+language, speechText ] );
+    
     // store its PID
     speechPID = espeak.pid;
     console.log( speechPID + " : " + speechText );

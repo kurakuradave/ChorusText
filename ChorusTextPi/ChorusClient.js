@@ -3,6 +3,7 @@
 // ==================================================
 var serialPort = require("serialport");
 var cs = require( './ChorusSpeech.js' );
+var cd = require( './ChorusDocument.js' );
 var SerialPort = serialPort.SerialPort; // localize object constructor
 
 
@@ -88,11 +89,15 @@ io.on('connection', function(socket){
     console.log( "<<<<<<<<<< Received new text: " );
     console.log( itObj.rawText );
     importedRawText = itObj.rawText;
-    cs.say( importedRawText );
+    cd.setVisualText( itObj.rawText );
+    cd.parseToCTDocu();
   } );
 
-  socket.on( 'initForRead', function( data ) {  
-    socket.emit( 'initForRead', { 'rawText': importedRawText } );
+  socket.on( 'initForRead', function( data ) { 
+    var ifrObj = { 'lines' : cd.getLines(), 
+                   'cursor' : cd.getCursor()
+    }; 
+    socket.emit( 'initForRead', ifrObj );
   } );
 
 });
@@ -105,23 +110,16 @@ io.on('connection', function(socket){
 // ==================================================
 var sp;
 var myParagraph = "";
-var rate = 100;
+var rate = 200;
 var ipLine = 0;
 var ipWord = 0;
 var ipChar = 0;
 
+cd.setVisualText( "This is just a dummy text.\nThat acts as a plaeeholder for the text.\nIt will be replaced as osoon as the user import some text." );
+cd.parseToCTDocu();
 
+cs.setLanguage( "indonesian" );
 
-
-// test paragraph
-myParagraph += "\nMary had a little lamb\n";
-myParagraph += "Little lamb, little land\n";
-myParagraph += "Mary had a little lamb\n";
-myParagraph += "It's fleas was white as snow";
-
-// test lines
-var myLines = myParagraph.split( "\n" );
-console.log( myLines );
 
 // set rate
 cs.setRate( rate );
@@ -152,6 +150,19 @@ sp.on("data", function (data) {
   console.log("here: "+data);
   if( data.indexOf( "{" ) == 0 ) {
     var obj = JSON.parse( data );
+    if( obj.hasOwnProperty( 'read' ) ){
+        cd.updateCursor( obj.read );
+        var tfs = cd.getTextForSpeech( obj.read );
+        if( tfs != "" ) {
+          if( obj.read.hasOwnProperty( 'char' ) )
+            cs.say( tfs, "punctuation" );
+          else
+            cs.say( tfs );
+        }
+    }
+  
+
+/*
     if( obj.read ) {
         console.log( obj.read );
         if( obj.read.line ) {
@@ -185,6 +196,7 @@ sp.on("data", function (data) {
             }
         }
     }
+*/
   }
 });
 
