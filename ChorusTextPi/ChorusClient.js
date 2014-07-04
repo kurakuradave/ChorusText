@@ -81,24 +81,23 @@ app.use(function(err, req, res, next) {
 // ==================================================
 
 var importedRawText = "";
-
 io.on('connection', function(socket){
-  console.log('a user connected');
+      console.log('a user connected');
 
-  socket.on( 'importText', function( itObj ) {
-    console.log( "<<<<<<<<<< Received new text: " );
-    console.log( itObj.rawText );
-    importedRawText = itObj.rawText;
-    cd.setVisualText( itObj.rawText );
-    cd.parseToCTDocu();
-  } );
+      socket.on( 'importText', function( itObj ) {
+        console.log( "<<<<<<<<<< Received new text: " );
+        console.log( itObj.rawText );
+        importedRawText = itObj.rawText;
+        cd.setVisualText( itObj.rawText );
+        cd.parseToCTDocu();
+      } );
 
-  socket.on( 'initForRead', function( data ) { 
-    var ifrObj = { 'lines' : cd.getLines(), 
-                   'cursor' : cd.getCursor()
-    }; 
-    socket.emit( 'initForRead', ifrObj );
-  } );
+      socket.on( 'initForRead', function( data ) { 
+        var ifrObj = { 'lines' : cd.getLines(), 
+                       'cursor' : cd.getCursor()
+        }; 
+        socket.emit( 'initForRead', ifrObj );
+      } );   
 
 });
 
@@ -115,10 +114,10 @@ var ipLine = 0;
 var ipWord = 0;
 var ipChar = 0;
 
-cd.setVisualText( "This is just a dummy text.\nThat acts as a plaeeholder for the text.\nIt will be replaced as osoon as the user import some text." );
+cd.setVisualText( "This is just a dummy text.\nThat acts as a placeholder for the text.\nIt will be replaced as osoon as the user import some text." );
 cd.parseToCTDocu();
 
-cs.setLanguage( "indonesian" );
+cs.setLanguage( "english" );
 
 
 // set rate
@@ -152,6 +151,9 @@ sp.on("data", function (data) {
     var obj = JSON.parse( data );
     if( obj.hasOwnProperty( 'read' ) ){
         cd.updateCursor( obj.read );
+        console.log( ">>>>>>>>>> emitting cursorUpdate" );
+        console.log( cd.getCursor() );
+        io.emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
         var tfs = cd.getTextForSpeech( obj.read );
         if( tfs != "" ) {
           if( obj.read.hasOwnProperty( 'char' ) )

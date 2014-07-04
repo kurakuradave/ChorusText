@@ -5,11 +5,11 @@ var ctCursor = { 'line' : 0,
                  'word' : 0,
                  'char' : 0,
                  'getLine' : function() { return this.line; },
-                 'setLine' : function( val ) { this.line = val; },
+                 'setLine' : function( val ) { this.line = parseInt( val ); },
                  'getWord' : function() { return this.word; },
-                 'setWord' : function( val ) { this.word = val; },
+                 'setWord' : function( val ) { this.word = parseInt( val ); },
                  'getChar' : function() { return this.char; },
-                 'setChar' : function( val ) { this.char = val; } 
+                 'setChar' : function( val ) { this.char = parseInt( val ); } 
                };
 var activeLines = [];
 
@@ -24,11 +24,21 @@ var setVisualText = function( someText ){
 
 
 
+var resetCursor = function() {
+    setCursorLine( 0 );
+    setCursorWord( 0 );
+    setCursorChar( 0 );
+};
+
+
+
+
 var parseToCTDocu = function() {
     if( visualText == "" ) {
         // blank document, throw an error
     } else {
         loadCTDocu( visualText );
+        resetCursor();
     }
 };
 
@@ -36,6 +46,7 @@ var parseToCTDocu = function() {
 
 
 var loadCTDocu = function( someText ) {
+    lines = [];
     var tempLines = someText.split( "\n" );
     for( var i = 0; i < tempLines.length; i++ ) {
         var tline = tempLines[ i ];
@@ -111,6 +122,8 @@ var updateCursor = function( tactileInputObj ) {
     if( tactileInputObj.hasOwnProperty( 'word' ) ){
         if( getCursorLine() != -1 ) {
             setCursorWord( tactileInputObj.word );
+            // reset dependant(s)
+            setCursorChar( 0 );
         } else {
             setCursorWord( -1 );
         }
@@ -118,6 +131,9 @@ var updateCursor = function( tactileInputObj ) {
 
     if( tactileInputObj.hasOwnProperty( 'line' ) ){
         setCursorLine( tactileInputObj.line );  
+        // reset dependant(s)
+        setCursorWord( 0 );
+        setCursorChar( 0 );
     }
 };
 

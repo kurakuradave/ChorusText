@@ -9,7 +9,7 @@ block content
     h1=title
       div.textspace
         ol
-          li( ng-repeat="renderLine in renderLines", ng-bind-html="renderLine.text" )
-            {{renderLine.text}} 
+          li( ng-repeat="rLine in renderedLines", ng-bind-html="rLine.text" )
+            {{rLine.text}} 
 
  
