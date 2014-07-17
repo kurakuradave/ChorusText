@@ -84,7 +84,7 @@ var importedRawText = "";
 io.on('connection', function(socket){
       console.log('a user connected');
 
-      socket.on( 'initForImport", function( data ) {  
+      socket.on( 'initForImport', function( data ) {  
           socket.join( "import" );
       } );
 
