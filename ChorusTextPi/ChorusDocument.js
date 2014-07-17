@@ -16,7 +16,10 @@ var activeLines = [];
 
 
 var setVisualText = function( someText ){
-    var temp = someText.replace( /\. /g, ".\n" );
+    var temp = "";
+    if( someText != "" ) {
+        temp = someText.replace( /\. /g, ".\n" );
+    }
     visualText = temp;
     console.log( visualText );
 };
@@ -38,8 +41,8 @@ var parseToCTDocu = function() {
         // blank document, throw an error
     } else {
         loadCTDocu( visualText );
-        resetCursor();
     }
+    resetCursor();
 };
 
 
