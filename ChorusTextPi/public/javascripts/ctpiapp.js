@@ -9,6 +9,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
         };
 
         $scope.init = function() {
+            $scope.rawText = "";
             console.log( "emitting initForImport" );
             socket.emit( 'initForImport' );
         };
