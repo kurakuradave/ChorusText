@@ -77,12 +77,16 @@ app.use(function(err, req, res, next) {
 
 
 // ==================================================
-// Socket.io application logic
+// socket.io application logic
 // ==================================================
 
 var importedRawText = "";
 io.on('connection', function(socket){
       console.log('a user connected');
+
+      socket.on( 'initForImport", function( data ) {  
+          socket.join( "import" );
+      } );
 
       socket.on( 'importText', function( itObj ) {
         console.log( "<<<<<<<<<< Received new text: " );
@@ -93,11 +97,24 @@ io.on('connection', function(socket){
       } );
 
       socket.on( 'initForRead', function( data ) { 
+        socket.join( "read" );
         var ifrObj = { 'lines' : cd.getLines(), 
                        'cursor' : cd.getCursor()
         }; 
-        socket.emit( 'initForRead', ifrObj );
-      } );   
+        socket.to( "read" ).emit( 'initForRead', ifrObj );
+      } ); 
+
+      socket.on( 'initForSettings', function( data ) {  
+        socket.join( 'settings' );
+        var ifsObj = cs.getSettings();
+        socket.to( "settings" ).emit( 'initForSettings', ifsObj );
+      } );  
+
+      socket.on( 'applySettings', function( asObj ) {  
+        cs.setRate( asObj.rate );
+        cs.setLanguage( asObj.lang );
+        
+      } );
 
 });
 
@@ -114,7 +131,7 @@ var ipLine = 0;
 var ipWord = 0;
 var ipChar = 0;
 
-cd.setVisualText( "This is just a dummy text.\nThat acts as a placeholder for the text.\nIt will be replaced as osoon as the user import some text." );
+cd.setVisualText( "This is just a dummy text.\nThat acts as a placeholder for the text.\nIt will be replaced as soon as the user import some text." );
 cd.parseToCTDocu();
 
 cs.setLanguage( "english" );
@@ -153,7 +170,7 @@ sp.on("data", function (data) {
         cd.updateCursor( obj.read );
         console.log( ">>>>>>>>>> emitting cursorUpdate" );
         console.log( cd.getCursor() );
-        io.emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
+        io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
         var tfs = cd.getTextForSpeech( obj.read );
         if( tfs != "" ) {
           if( obj.read.hasOwnProperty( 'char' ) )
@@ -162,43 +179,6 @@ sp.on("data", function (data) {
             cs.say( tfs );
         }
     }
-  
-
-/*
-    if( obj.read ) {
-        console.log( obj.read );
-        if( obj.read.line ) {
-            ipLine = obj.read.line;
-            ipWord = 0;
-            ipChar = 0;
-            if( myLines[ obj.read.line ] ) {
-                console.log( myLines[ obj.read.line ] );
-                cs.say( myLines[ obj.read.line ] );
-            }
-        }
-        else if( obj.read.word ) {
-            ipWord = obj.read.word;
-            ipChar = 0;
-            if( myLines[ ipLine ] ) {
-                var theWords =( " " + myLines[ ipLine ] ).split( " " );
-                if( theWords[ ipWord ] ) {
-                    console.log( theWords[ ipWord ] );
-                    cs.say( theWords [ ipWord ]  );
-                }
-            }
-        } else if( obj.read.char ) {
-            ipChar = obj.read.char;
-            if( myLines[ ipLine ] ) {
-                var theWords = ( " " + myLines[ ipLine ] ).split( " " );
-                var theWord = " " + theWords[ ipWord ];
-                if( theWord[ ipChar ] ) {
-                    console.log( theWord[ ipChar ] );
-                    cs.say( theWord[ ipChar ] );
-                }
-            }
-        }
-    }
-*/
   }
 });
 

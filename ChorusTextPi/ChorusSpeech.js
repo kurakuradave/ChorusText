@@ -20,6 +20,7 @@ var setRate = function( val ) {
 
 
 var setLanguage = function( val ) {
+    val = val.toLowerCase();
     if( val == "chinese" ) {
         language = "zh";
     } else if( val == "indonesian" ) {
@@ -27,6 +28,15 @@ var setLanguage = function( val ) {
     } else {
         language = "en";
     }
+}
+
+
+
+
+var getSettings = function() {
+    return { rate: speechRate,
+             lang: language
+           };
 }
 
 
@@ -77,6 +87,7 @@ var killSpeech = function() {
 };
 
 
+module.exports.getSettings = getSettings;
 module.exports.setRate = setRate;
 module.exports.setLanguage = setLanguage;
 module.exports.say = say;

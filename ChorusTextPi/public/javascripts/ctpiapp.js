@@ -1,12 +1,4 @@
 angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
-    .config(function($sceDelegateProvider) {
-        $sceDelegateProvider.resourceUrlWhitelist([
-        // Allow same origin resource loads.
-        'self',
-        'http://localhost:3000/**',
-        // Allow loading from our assets domain.  Notice the difference between * and **.
-       'http://cobuhapi:3000/**']);
-     })
 
     .controller( 'ImportCtrl', function( $scope ) {
         $scope.sendToBoard = function() {
@@ -14,8 +6,18 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
             console.log( $scope.rawText );
             socket.emit( 'importText', { 'rawText': $scope.rawText } );
         };
+
+        $scope.init = function() {
+            socket.emit( 'initForImport' );
+        };
+        $scope.init();
+
     } ) // end controller( 'ImportCtrl' )
 
+
+
+
+    //====================================
     .controller( 'ReadCtrl', function( $scope ) {  
         $scope.lines = [];
         $scope.renderedLines = [];
@@ -71,22 +73,32 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
             var focusedWord = cursor.word;
             var focusedChar = cursor.char;
 
+            // temp variables to hold text data
+            var newCharText = "";
+            var newCharWordText = "";
+            var newCharWordLineText = "";
+
             // get the focused lwc object
-            $scope.newLine = {};
+            $scope.newLine = {text: "",
+                              words: [ { text: "", 
+                                         chars: [ { text: "" } ]
+                                       } ] 
+                             };
 
             if( focusedLine >= 0 ) {
                 $scope.newLine = $scope.clone( lines[ focusedLine ] );
                     
                 // inject highlighting text on focused lwc
-                if( focusedChar >= 0 ) {
-                    if( focusedWord >= 0 ) {
+                newCharWordLineText = newLine.text;
+                if( focusedWord >= 0 )
+                    newCharWordText = $scope.newLine.words[ focusedWord ].text;
+                if( newCharWordText != "" ) {
+                    if( focusedLine >= 0 )
                         newCharText = $scope.newLine.words[ focusedWord ].chars[ focusedChar ].text;
+                    if( newCharText != "" ) {
                         newCharText = "<span class='focusc'>"+ newCharText + "</span>";
+                        $scope.newLine.words[ focusedWord ].chars[ focusedChar ].text = newCharText;
                     }
-                    $scope.newLine.words[ focusedWord ].chars[ focusedChar ].text = newCharText;
-                }
-            
-                if( focusedWord >= 0 ) {
                     newCharWordText = "<span class='focusw'>";
                     for( var i = 0; i < $scope.newLine.words[ focusedWord ].chars.length; i++ ) {
                         newCharWordText += $scope.newLine.words[focusedWord].chars[ i ].text;
@@ -94,16 +106,16 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                     newCharWordText += "</span>";
                     $scope.newLine.words[ focusedWord ].text = newCharWordText;
                 }
-
-                var newCharWordLineText = "<span class='focusl'><strong>";
+                newCharWordLineText = "<span class='focusl'><strong>";
                 for( var j = 0; j < $scope.newLine.words.length; j++ ) {
                     newCharWordLineText += $scope.newLine.words[ j ].text + " ";
                 }
-                newCharWordLineText.substring( newCharWordLineText.length - 2 );
+                if( newCharWordLineText.indexOf( "\n" ) != -1 )
+                    newCharWordLineText.substring( newCharWordLineText.length - 2 );
                 newCharWordLineText += "</strong></span>";
                 $scope.newLine.text = newCharWordLineText;
             }
- 
+
             // populate ret
             for( var i = 0; i < lines.length; i ++ ) {
                 if( i == focusedLine ) {
@@ -150,6 +162,37 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
         $scope.init();
     } ) // end controller( 'ReadCtrl' )
+
+
+
+
+    //====================================
+    .controller( 'SettingsCtrl', function( $scope ) {  
+        $scope.espeakSettings = {};
+
+
+
+
+        $scope.applySettings = function() {
+            socket.emit( 'applySettings', $scope.espeakSettings );
+        };
+
+
+
+        socket.on( 'initForSettings', function( ifsObj ) {  
+            $scope.$apply( function() {
+                $scope.espeakSettings = ifsObj;
+            }  
+        } );
+
+
+
+
+        $scope.init = function() {
+            socket.emit( 'initForSettings' );
+        };
+        $scope.init();
+
 
 
 
