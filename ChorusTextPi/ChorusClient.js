@@ -85,6 +85,8 @@ io.on('connection', function(socket){
       console.log('a user connected');
 
       socket.on( 'initForImport', function( data ) {  
+          console.log( "<<<<<<<<<< received initForImport" );
+          console.log( "joining room import" );
           socket.join( "import" );
       } );
 
@@ -94,25 +96,39 @@ io.on('connection', function(socket){
         importedRawText = itObj.rawText;
         cd.setVisualText( itObj.rawText );
         cd.parseToCTDocu();
+        //send update to sockets in room import
+        var ifrObj = { 'lines' : cd.getLines(), 
+                       'cursor' : cd.getCursor()
+        }; 
+        console.log( ">>>>>>>>>> emitting initForRead" );
+        io.to( "read" ).emit( 'initForRead', ifrObj );
       } );
 
       socket.on( 'initForRead', function( data ) { 
+          console.log( "<<<<<<<<<< received initForRead" );
+          console.log( "joining room read" );
         socket.join( "read" );
         var ifrObj = { 'lines' : cd.getLines(), 
                        'cursor' : cd.getCursor()
         }; 
-        socket.to( "read" ).emit( 'initForRead', ifrObj );
+        console.log( ">>>>>>>>>> emitting initForRead" );
+        io.to( "read" ).emit( 'initForRead', ifrObj );
       } ); 
 
       socket.on( 'initForSettings', function( data ) {  
+          console.log( "<<<<<<<<<< received initForSettings" );
+          console.log( "joining room settings" );
         socket.join( 'settings' );
-        var ifsObj = cs.getSettings();
-        socket.to( "settings" ).emit( 'initForSettings', ifsObj );
+        var ifsObj = { 'espeakSettings': cs.getSettings(), 'supportedLanguages' : cs.getSupportedLanguages() };
+        console.log( ">>>>>>>>>> emitting initForSettings" );
+        io.to( "settings" ).emit( 'initForSettings', ifsObj );
       } );  
 
-      socket.on( 'applySettings', function( asObj ) {  
-        cs.setRate( asObj.rate );
-        cs.setLanguage( asObj.lang );
+      socket.on( 'applySettings', function( asObj ) { 
+          console.log( "<<<<<<<<<< received applySettings" );
+          console.log( "applying new settings" );
+          cs.setRate( asObj.rate );
+          cs.setLanguage( asObj.lang );
         
       } );
 

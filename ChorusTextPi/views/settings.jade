@@ -4,19 +4,23 @@ block content
   link(rel='stylesheet', href='/stylesheets/chorustextpi.css')
   div.textblock.container( ng-controller='SettingsCtrl' )
     h1=title
-    div.row-fluid
-      p Rate
-      input(
-        ng-model="espeakSettings.rate"
-        ng-change="applySettings()"
-        type="text"
-        size="3"
-      )
-    div.row-fluid
-      p Language
-      select( ng-model="espeakSettings.lang"
-              ng-change="applySettings()"
-              option( value="English" ) English
-              option( value="Indonesian" ) Indonesian
-              option( value="Chinese" ) Chinese
-      )
+    div.row
+      div.col-xs-offset-2.col-xs-1
+        p Rate
+      div.col-xs-1
+        input(
+          ng-model="espeakSettings.rate"
+          ng-change="applySettings()"
+          type="text"
+          size="3"
+        )
+
+    div.row
+      div.col-xs-offset-2.col-xs-1
+        p Language
+      div.col-xs-1
+        select( ng-model="espeakSettings.lang"
+                ng-change="applySettings()"
+                ng-options="lang for lang in supportedLanguages"
+        )
+

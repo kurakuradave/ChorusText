@@ -4,13 +4,14 @@ var speechRate = 350;
 var language = "en";
 var speechText = "";
 var speechPID;
+var supportedLanguages = [ "English", "Indonesian", "Chinese" ]
 
 
 
 
 var setRate = function( val ) {
-    if( val > 200 )
-        val = 200;
+    if( val > 500 )
+        val = 500;
     if( val < 25 )
         val = 25;
     speechRate = val;
@@ -87,6 +88,16 @@ var killSpeech = function() {
 };
 
 
+
+
+var getSupportedLanguages = function() {
+    return supportedLanguages;
+};
+
+
+
+
+module.exports.getSupportedLanguages = getSupportedLanguages;
 module.exports.getSettings = getSettings;
 module.exports.setRate = setRate;
 module.exports.setLanguage = setLanguage;

@@ -7,6 +7,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
         };
 
         $scope.init = function() {
+            console.log( "emitting initForImport" );
             socket.emit( 'initForImport' );
         };
         $scope.init();
@@ -84,11 +85,12 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                                        } ] 
                              };
 
+            console.log( focusedLine );
             if( focusedLine >= 0 ) {
                 $scope.newLine = $scope.clone( lines[ focusedLine ] );
                     
                 // inject highlighting text on focused lwc
-                newCharWordLineText = newLine.text;
+                newCharWordLineText = $scope.newLine.text;
                 if( focusedWord >= 0 )
                     newCharWordText = $scope.newLine.words[ focusedWord ].text;
                 if( newCharWordText != "" ) {
@@ -156,6 +158,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
 
         $scope.init = function() {
+            console.log( ">>>>>>>>>> emitting initForRead" );
             socket.emit( 'initForRead' );
         };
 
@@ -168,6 +171,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
     //====================================
     .controller( 'SettingsCtrl', function( $scope ) {  
         $scope.espeakSettings = {};
+        $scope.supportedLanguages = [ "English", "Indonesian", "Chinese" ];
 
 
 
@@ -179,8 +183,10 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
 
         socket.on( 'initForSettings', function( ifsObj ) {  
+            console.log( "<<<<<<<<<< received initForSettings" );
             $scope.$apply( function() {
-                $scope.espeakSettings = ifsObj;
+                $scope.espeakSettings = ifsObj.espeakSettings;
+                $scope.supportedLanguages = ifsObj.supportedLanguages;
             } );
         } );
 
@@ -188,6 +194,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
 
         $scope.init = function() {
+            console.log( ">>>>>>>>>> emitting initForSettings" );
             socket.emit( 'initForSettings' );
         };
         $scope.init();
