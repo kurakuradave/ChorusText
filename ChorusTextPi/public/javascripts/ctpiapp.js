@@ -182,7 +182,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
         socket.on( 'initForSettings', function( ifsObj ) {  
             $scope.$apply( function() {
                 $scope.espeakSettings = ifsObj;
-            }  
+            } );
         } );
 
 
