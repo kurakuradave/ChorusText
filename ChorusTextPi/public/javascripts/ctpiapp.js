@@ -1,5 +1,4 @@
 angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
-
     .controller( 'ImportCtrl', function( $scope ) {
         $scope.sendToBoard = function() {
 	    console.log( '>>>>>>>>>> Emitting importText: ');
@@ -192,6 +191,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
             socket.emit( 'initForSettings' );
         };
         $scope.init();
+    } )
 
 
 
