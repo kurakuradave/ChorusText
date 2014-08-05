@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448"
+   height="1052.3622"
+   id="svg4243"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="arduino_screwholes.svg">
+  <defs
+     id="defs4245" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="24.608326"
+     inkscape:cy="115.82867"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1280"
+     inkscape:window-height="727"
+     inkscape:window-x="0"
+     inkscape:window-y="34"
+     inkscape:window-maximized="1"
+     units="mm" />
+  <metadata
+     id="metadata4248">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-2.5390623e-6)">
+    <g
+       id="g4804"
+       transform="translate(177.16535,-177.16543)">
+      <rect
+         ry="4.6932802"
+         rx="4.2383757"
+         y="863.60443"
+         x="0.10044745"
+         height="188.65738"
+         width="242.86996"
+         id="rect4251"
+         style="fill:none;stroke:#000000;stroke-width:0.20089491;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <path
+         transform="matrix(1.8755006,0,0,2.0630508,23.556349,-1120.2788)"
+         d="m 16.667517,1048.8267 c 0,1.3947 -1.243717,2.5253 -2.777919,2.5253 -1.534203,0 -2.77792,-1.1306 -2.77792,-2.5253 0,-1.3948 1.243717,-2.5254 2.77792,-2.5254 1.534202,0 2.777919,1.1306 2.777919,2.5254 z"
+         sodipodi:ry="2.5253813"
+         sodipodi:rx="2.7779195"
+         sodipodi:cy="1048.8267"
+         sodipodi:cx="13.889598"
+         id="path4253"
+         style="fill:none;stroke:#000000;stroke-width:0.10672953;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:type="arc" />
+      <path
+         transform="matrix(0.95958747,0,0,0.89700563,36.643497,-37.732105)"
+         d="m 23.738585,1014.9865 c 0,3.2079 -2.430901,5.8084 -5.42957,5.8084 -2.998668,0 -5.429569,-2.6005 -5.429569,-5.8084 0,-3.2079 2.430901,-5.8084 5.429569,-5.8084 2.998669,0 5.42957,2.6005 5.42957,5.8084 z"
+         sodipodi:ry="5.8083773"
+         sodipodi:rx="5.4295697"
+         sodipodi:cy="1014.9865"
+         sodipodi:cx="18.309015"
+         id="path4763"
+         style="fill:none;stroke:#000000;stroke-width:0.22594742;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:type="arc" />
+      <path
+         transform="matrix(3.1738073,0,0,4.5843885,27.824438,-3783.3744)"
+         d="m 66.67007,1048.9529 c 0,0.6276 -0.734924,1.1364 -1.641498,1.1364 -0.906574,0 -1.641498,-0.5088 -1.641498,-1.1364 0,-0.6276 0.734924,-1.1364 1.641498,-1.1364 0.906574,0 1.641498,0.5088 1.641498,1.1364 z"
+         sodipodi:ry="1.1364216"
+         sodipodi:rx="1.6414979"
+         sodipodi:cy="1048.9529"
+         sodipodi:cx="65.028572"
+         id="path4765"
+         style="fill:none;stroke:#000000;stroke-width:0.05513921;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:type="arc" />
+      <path
+         transform="matrix(2.5787984,0,0,2.4271043,69.447636,-1555.5981)"
+         d="m 65.912452,1022.689 c 0,1.1855 -0.904521,2.1466 -2.020305,2.1466 -1.115784,0 -2.020305,-0.9611 -2.020305,-2.1466 0,-1.1855 0.904521,-2.1465 2.020305,-2.1465 1.115784,0 2.020305,0.961 2.020305,2.1465 z"
+         sodipodi:ry="2.1465743"
+         sodipodi:rx="2.0203052"
+         sodipodi:cy="1022.689"
+         sodipodi:cx="63.892147"
+         id="path4767"
+         style="fill:none;stroke:#000000;stroke-width:0.08394035;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:type="arc" />
+    </g>
+  </g>
+</svg>
