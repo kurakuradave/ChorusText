@@ -37,3 +37,9 @@ Repository Structure
 * Code for node client is located in /ChorusTextPi/
 * Code for node server is located in /node-server/ (not yet)
 * Hardware related items such as laser-cutting design files, wiring guide, list of components used, datasheets, etc are located in /hardware/
+
+
+
+License
+-------
+BSD License
