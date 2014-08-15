@@ -1,0 +1,24 @@
+extends layout
+
+block content
+
+  link(rel='stylesheet', href='/stylesheets/chorustextpi.css')
+
+  div.textblock.container( ng-controller='ImportCtrl' )
+    h1=title
+    div.row
+      p To import some text into your ChorusTextBoard, simply drop the text, either via Copy-Paste or typing, into the box below and then click the "Upload" button.
+
+    div.row-fluid
+      div.stark.col-xs-offset-1.col-xs-10
+        textarea( cols=80 
+                  rows=15
+                  ng-model="rawText"
+                  ng-trim="false"
+                  placeholder="put some text here, and then click Import"
+        )
+        input( class="btn-large btn-primary" 
+               type="submit" 
+               value="Import"
+               ng-click="sendToBoard()"
+        )

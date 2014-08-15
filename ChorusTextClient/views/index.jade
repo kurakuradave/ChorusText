@@ -1,0 +1,27 @@
+extends layout
+
+block content
+
+  link(rel='stylesheet', href='/stylesheets/chorustextpi.css')
+  script( type='text/javascript', src='/socket.io/socket.io.js' )
+  script( type='text/javascript', src='/javascripts/import.js' )
+
+  div.container
+    div.textblock.row
+      h1= title
+      p Welcome to local ChorusText. This web page is connected to your ChorusTextBoard.
+      p Here you can import some text into your ChorusTextBoard  and then read an enlarged version of the text.
+    div.launcher.row
+      div.col-xs-offset-1.col-xs-4.stark
+        h3
+          a(href="/import")
+            span.glyphicon.glyphicon-import
+            |    Import
+      div.col-xs-offset-2.col-xs-4.stark
+        h3
+          a(href="/read")
+            span.glyphicon.glyphicon-eye-open
+            |    Read
+
+
+
