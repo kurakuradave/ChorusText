@@ -144,7 +144,7 @@ void CSlider::processTactile() {
       myType = "line";
     else if( _sliderKind == 2 )
       myType = "word";
-    String msg = String( "{ \"read\" : { \"" + myType + "\" : \"" ) + String( curSlot ) + String( "\" } }" );
+    String msg = String( "{\"read\":{\"" + myType + "\":\"" ) + String( curSlot ) + String( "\"}}" );
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
@@ -468,6 +468,9 @@ byte switchVar1 = 72;  //01001000
 byte switchVar2 = 159; //10011111
 byte switchVar3 = 33; //000100001
 
+byte oldSwitchVar1 = 0;
+byte oldSwitchVar2 = 0;
+byte oldSwitchVar3 = 0;
 
 
 
@@ -511,9 +514,101 @@ void loop() {
   switchVar2 = shiftIn(dataPin, clockPin);
   switchVar3 = shiftIn(dataPin, clockPin);
 
-  Serial.println(switchVar1, BIN);
-  Serial.println(switchVar2, BIN);
-  Serial.println(switchVar3, BIN);
+  if( switchVar1 != 0 && oldSwitchVar1 == 0 ) {
+    oldSwitchVar1 = switchVar1;
+    switch( switchVar1 ) {
+      case 1: // go top
+        lineSlider.slideToTarget( 50 );
+        wordSlider.slideToTarget( 50 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"line\":\"top\"}}" );
+      break;
+      case 2: // scroll up
+        lineSlider.slideToTarget( 950 );
+        wordSlider.slideToTarget( 50 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"line\":\"scrollup\"}}" );
+      break;
+      case 4: // scroll down
+        lineSlider.slideToTarget( 50 );
+        wordSlider.slideToTarget( 50 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"line\":\"scrolldown\"}}" );
+      break;
+      case 8: // go bottom
+        lineSlider.slideToTarget( 950 );
+        wordSlider.slideToTarget( 50 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"line\":\"bottom\"}}" );
+      break;
+    }
+  } else {
+    if( switchVar1 == 0 ) {
+      oldSwitchVar1 = 0;
+    } 
+  }
+  
+  if( switchVar2 != 0 && oldSwitchVar2 == 0 ) {
+    oldSwitchVar2 = switchVar2;
+    switch( switchVar2 ) {
+      case 1: // go top
+        wordSlider.slideToTarget( 50 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"word\":\"top\"}}" );
+      break;
+      case 2: // scroll up
+        wordSlider.slideToTarget( 950 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"word\":\"scrollup\"}}" );
+      break;
+      case 4: // scroll down
+        wordSlider.slideToTarget( 50 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"word\":\"scrolldown\"}}" );
+      break;
+      case 8: // go bottom
+        wordSlider.slideToTarget( 950 );
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"word\":\"bottom\"}}" );
+      break;
+      case 16: // fringe top
+        Serial.println( "{\"speechrate\":\"inc\"}" );
+      break;
+      case 32: // fringe bottom
+        Serial.println( "{\"speechrate\":\"dec\"}" );
+      break;        
+    }
+  } else {
+    if( switchVar2 == 0 ) {
+      oldSwitchVar2 = 0;
+    } 
+  }
+  
+  if( switchVar3 != 0 && oldSwitchVar3 == 0 ) {
+    oldSwitchVar3 = switchVar3;
+    switch( switchVar3 ) {
+      case 1: // go top
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"char\":\"top\"}}" );
+      break;
+      case 2: // scroll up
+        charSlider.slideToTarget( 950 );
+        Serial.println( "{\"jump\":{\"char\":\"scrollup\"}}" );
+      break;
+      case 4: // scroll down
+        charSlider.slideToTarget( 50 );
+        Serial.println( "{\"jump\":{\"char\":\"scrolldown\"}}" );
+      break;
+      case 8: // go bottom
+        charSlider.slideToTarget( 950 );
+        Serial.println( "{\"jump\":{\"char\":\"bottom\"}}" );
+      break;
+    }
+  } else {
+    if( switchVar3 == 0 ) {
+      oldSwitchVar3 = 0;
+    } 
+  }
 
   // process Sliders
   uint8_t i;

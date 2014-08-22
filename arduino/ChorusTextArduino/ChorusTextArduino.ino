@@ -482,6 +482,13 @@ CSlider charSlider( 3, 2, cMotor );
 // create CDial object
 CDial rotDial( 3, rMotor );
 
+// for incoming serial data
+int incomingNum = 0;
+
+// expecting target for which slider
+String queryType = "";
+
+
 
 
 
@@ -505,6 +512,20 @@ void setup() {
 
 
 void loop() {
+  // process incoming Serial data
+  if( Serial.available() > 0 ) {
+    incomingNum = Serial.parseInt();
+    if( queryType == "line" ){
+      lineSlider.slideToTarget( incomingNum * 100 + 50 );  
+    } else if ( queryType == "word" ){
+      wordSlider.slideToTarget( incomingNum * 100 + 50);
+    } else if( queryType == "char" ) {
+      charSlider.slideToTarget( incomingNum * 100 + 50 );
+    }
+    queryType = "";
+    incomingNum = 0;
+  }
+
   // process shift-in registers
   digitalWrite(latchPin,1);
   delayMicroseconds(20);
@@ -522,12 +543,14 @@ void loop() {
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
         Serial.println( "{\"jump\":{\"line\":\"top\"}}" );
-      break;
       case 2: // scroll up
         lineSlider.slideToTarget( 950 );
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
         Serial.println( "{\"jump\":{\"line\":\"scrollup\"}}" );
+        queryType = "line";
+        Serial.println( "{\"query\":\"line\"}" );      break;
+
       break;
       case 4: // scroll down
         lineSlider.slideToTarget( 50 );
@@ -555,11 +578,16 @@ void loop() {
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
         Serial.println( "{\"jump\":{\"word\":\"top\"}}" );
+
       break;
       case 2: // scroll up
         wordSlider.slideToTarget( 950 );
         charSlider.slideToTarget( 50 );
         Serial.println( "{\"jump\":{\"word\":\"scrollup\"}}" );
+        queryType = "word";
+        Serial.println( "{\"query\":\"word\"}" );
+        queryType = "word";
+        Serial.println( "{\"query\":\"word\"}" );
       break;
       case 4: // scroll down
         wordSlider.slideToTarget( 50 );
@@ -594,6 +622,8 @@ void loop() {
       case 2: // scroll up
         charSlider.slideToTarget( 950 );
         Serial.println( "{\"jump\":{\"char\":\"scrollup\"}}" );
+        queryType = "char";
+        Serial.println( "{\"query\":\"char\"}" );
       break;
       case 4: // scroll down
         charSlider.slideToTarget( 50 );

@@ -182,6 +182,36 @@ sp.on("data", function (data) {
   console.log("here: "+data);
   if( data.indexOf( "{" ) == 0 ) {
     var obj = JSON.parse( data );
+    if( obj.hasOwnProperty( 'query' ) ) {
+        var theCursor = cd.getCursor();
+        switch( obj.query ) {
+            case "line" :
+                var target = 10;
+                var cLine = theCursor.line;
+                if( cLine < 10 ) {
+                    target = cLine;
+                    sp.write( target + "\n" );
+                }
+            break;
+            case "word" :
+                var target = 10;
+                var cWord = theCursor.word;
+                if( cWord < 10 ) {
+                    target = cWord;
+                    sp.write( target + "\n" );
+                }
+            break;
+            case "char" :
+                var target = 10;
+                var cChar = theCursor.char;
+                if( cChar < 10 ) {
+                    target = cChar;
+                    sp.write( target + "\n" );
+                }
+            break;
+        }
+    }
+
     if( obj.hasOwnProperty( 'jump' ) ){
         cd.updateCursorBase( obj.jump );
         console.log( "" );
