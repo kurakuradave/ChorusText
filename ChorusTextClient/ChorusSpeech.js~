@@ -15,7 +15,7 @@ var setRate = function( val ) {
         } else if ( val == "dec" ) {
             speechRate -= 10;
         } else { // coming from web interface
-            speechRate = parseInt( val );
+            speechRate = val.parseInt();
         }
     // boundary check
     if( val > 500 )

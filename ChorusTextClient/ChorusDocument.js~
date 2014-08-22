@@ -15,34 +15,22 @@ var ctCursor = { 'line' : 0,
                  'setChar' : function( val ) { this.char = this.baseChar + parseInt( val ); },
                  'getBaseLine' : function() { return this.baseLine; },
                  'setBaseLine' : function( val ) { 
-                                     var tlines = lines.length;
-                                     if( tlines <= 0 ) {
-                                         //console.log( "tlines is an empty array, setting baseLine to 0" );
-                                         this.baseLine = 0;
-                                     } else {
-                                         var pVal = parseInt( val ); 
-                                         this.baseLine = pVal; 
-                                         if( this.baseLine < 0 ) 
-                                             this.baseLine = 0; 
-                                         else if( this.baseLine > lines.length - 1 ) 
-                                             this.baseLine = lines.length - 1; 
-                                     }
-                                 },
+                                     var pVal = parseInt( val ); 
+                                     this.baseLine = pVal; 
+                                     if( this.baseLine < 0 ) 
+                                         this.baseLine = 0; 
+                                     else if( this.baseLine > lines.length - 1 ) 
+                                         this.baseLine = lines.length - 1; 
+                                     },
                  'getBaseWord' : function() { return this.baseWord; },
                  'setBaseWord' : function( val ) { 
-                                     var twords = lines[this.line].words.length;
-                                     if( twords <= 0 ) {
-                                         //console.log( "twords is an empty array, setting baseWord to 0" );
-                                         this.baseWord = 0;
-                                     } else {
-                                         var pVal = parseInt( val ); 
-                                         this.baseWord = pVal; 
-                                         if( this.baseWord < 0 ) 
-                                             this.baseWord = 0; 
-                                         else if( this.baseWord > lines[ this.line ].words.length - 1 ) 
-                                             this.baseWord = lines[this.line].words.length - 1; 
-                                     }
-                                 },
+                                     var pVal = parseInt( val ); 
+                                     this.baseWord = pVal; 
+                                     if( this.baseWord < 0 ) 
+                                         this.baseWord = 0; 
+                                     else if( this.baseWord > lines[ this.line ].words.length - 1 ) 
+                                         this.baseWord = lines[this.line].words.length - 1; 
+                                     },
                  'getBaseChar' : function() { return this.baseChar; },
                  'setBaseChar' : function( val ) { 
                                      var tchars = lines[this.line].words[this.word].chars.length;

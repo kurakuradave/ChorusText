@@ -201,8 +201,7 @@ sp.on("data", function (data) {
     }
     if( obj.hasOwnProperty( 'speechrate' ) ){
         cs.setRate( obj.speechrate );
-        var announce = "Speech Rate Adjusted To: " + cs.getRate();
-        cs.say( announce ); 
+        cs.say( "Speech Rate Adjusted!" );
     }
   }
 });
