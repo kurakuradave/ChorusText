@@ -96,6 +96,7 @@ io.on('connection', function(socket){
         importedRawText = itObj.rawText;
         cd.setVisualText( itObj.rawText );
         cd.parseToCTDocu();
+        cs.sys_say( "text_imported" );
         //send update to sockets in room import
         var ifrObj = { 'lines' : cd.getLines(), 
                        'cursor' : cd.getCursor()
@@ -129,6 +130,7 @@ io.on('connection', function(socket){
           console.log( "applying new settings" );
           cs.setRate( asObj.rate );
           cs.setLanguage( asObj.lang );
+          cs.sys_say( "language_set" );
         
       } );
 
@@ -187,7 +189,7 @@ sp.on("data", function (data) {
         switch( obj.query ) {
             case "line" :
                 var target = 10;
-                var cLine = theCursor.getLine();
+                var cLine = theCursor.line;
                 if( cLine < 10 ) {
                     target = cLine;
                     sp.write( target + "\n" );
@@ -195,7 +197,7 @@ sp.on("data", function (data) {
             break;
             case "word" :
                 var target = 10;
-                var cWord = theCursor.getWord();
+                var cWord = theCursor.word;
                 if( cWord < 10 ) {
                     target = cWord;
                     sp.write( target + "\n" );
@@ -203,7 +205,7 @@ sp.on("data", function (data) {
             break;
             case "char" :
                 var target = 10;
-                var cChar = theCursor.getChar();
+                var cChar = theCursor.char;
                 if( cChar < 10 ) {
                     target = cChar;
                     sp.write( target + "\n" );
@@ -217,22 +219,26 @@ sp.on("data", function (data) {
         console.log( "" );
     }
     if( obj.hasOwnProperty( 'read' ) ){
-        cd.updateCursor( obj.read );
-        console.log( ">>>>>>>>>> emitting cursorUpdate" );
-        console.log( cd.getCursor() );
-        io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
-        var tfs = cd.getTextForSpeech( obj.read );
-        if( tfs != "" ) {
-          if( obj.read.hasOwnProperty( 'char' ) )
-            cs.say( tfs, "punctuation" );
-          else
-            cs.say( tfs );
-        }
+        cd.updateCursor( obj.read, function( doRead ) {
+            if( doRead ) { 
+                console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                console.log( cd.getCursor() );
+                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
+                var tfs = cd.getTextForSpeech( obj.read );
+                if( tfs != "" ) {
+                    if( obj.read.hasOwnProperty( 'char' ) )
+                        cs.say( tfs, "punctuation" );
+                    else
+                        cs.say( tfs );
+                }
+            } else {
+                cs.sys_say( "no_more_text" );
+            }
+        } );
     }
     if( obj.hasOwnProperty( 'speechrate' ) ){
         cs.setRate( obj.speechrate );
-        var announce = "Speech Rate Adjusted To: " + cs.getRate();
-        cs.say( announce ); 
+        cs.sys_say( "speechrate_adjusted" );
     }
   }
 });
@@ -240,6 +246,7 @@ sp.on("data", function (data) {
 
 
 
+cs.sys_say( "client_ready");
 // ==================================================
 // Exports
 // ==================================================

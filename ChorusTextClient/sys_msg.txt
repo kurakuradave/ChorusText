@@ -1,0 +1,45 @@
+English: "Speech rate adjusted to: "
+Indonesian: "Kecepatan pengucapan distel ke: "
+Chinese: ""
+
+English: "New text imported successfully."
+Indonesian: "Import text baru telah berhasil."
+Chinese: ""
+
+English: "Device is ready."
+Indonesian: "Perangkat siap beroperasi."
+Chinese: ""
+
+English: "Language is set to: English."
+Indonesian: "Sekarang menggunakan Bahasa Indonesia."
+Chinese: ""
+
+English: "No more text to read."
+Indonesian: "Tidak ada lagi teks untuk dibacakan."
+Chinese: ""
+
+
+
+
+
+
+
+English: "Speech rate adjusted to: " 
+Indonesian: "Kecepatan pengucapan distel ke: " 
+Chinese: "语言速度调整为：" 
+
+English: "New text imported successfully." 
+Indonesian: "Import text baru telah berhasil." 
+Chinese: "新文本导入成功。" 
+
+English: "Device is ready." 
+Indonesian: "Perangkat siap beroperasi." 
+Chinese: "设备已准备就绪。" 
+
+English: "Language is set to: English." 
+Indonesian: "Sekarang menggunakan Bahasa Indonesia." 
+Chinese: "语言设置为：中文" 
+
+English: "No more text to read." 
+Indonesian: "Tidak ada lagi teks untuk dibacakan." 
+Chinese: "没有文字阅读了。"
