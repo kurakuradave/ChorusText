@@ -188,7 +188,7 @@ sp.open( function( error ) {
         cs.sys_say( "client_ready" );
         sp.on("data", function (data) {
             console.log("here: "+data);
-            if( data.indexOf( "{" ) == 0 && data.indexOf( "}" ) == data.length - 1 ) {
+            if( data.indexOf( "{" ) == 0 && data[ data.length - 1 ] == "}" ) {
                 var obj = JSON.parse( data );
                 if( obj.hasOwnProperty( 'query' ) ) {
                     var theCursor = cd.getCursor();
