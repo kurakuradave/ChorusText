@@ -174,7 +174,8 @@ serialPort.list(function (err, ports) {
 
 // init serial port at /dev/ttyACM0
 sp = new SerialPort("/dev/ttyACM0", {
-  parser: serialPort.parsers.readline("\n")
+  parser: serialPort.parsers.readline("\n");
+  cs.sys_say( "client_ready");
 });
 
 
@@ -246,7 +247,7 @@ sp.on("data", function (data) {
 
 
 
-cs.sys_say( "client_ready");
+
 // ==================================================
 // Exports
 // ==================================================
