@@ -174,15 +174,21 @@ serialPort.list(function (err, ports) {
 
 // init serial port at /dev/ttyACM0
 sp = new SerialPort("/dev/ttyACM0", {
-  parser: serialPort.parsers.readline("\n")
+  parser: serialPort.parsers.readline("\n"), 
+  baudrate : 9600,
+  false
 });
 
 
 
-
+sp.open( function( error ) {
+    if( error ) {
+        console.log( "ERROR - Can't Opent Serial Port!" );
+    } else {
+    cs.sys_say( "client_ready" );
 sp.on("data", function (data) {
   console.log("here: "+data);
-  if( data.indexOf( "{" ) == 0 ) {
+  if( data.indexOf( "{" ) == 0 && data.indexOf( "}" ) == data.length - 1 ) {
     var obj = JSON.parse( data );
     if( obj.hasOwnProperty( 'query' ) ) {
         var theCursor = cd.getCursor();
@@ -246,7 +252,7 @@ sp.on("data", function (data) {
 
 
 
-cs.sys_say( "client_ready");
+
 // ==================================================
 // Exports
 // ==================================================
