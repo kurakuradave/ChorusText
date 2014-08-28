@@ -185,68 +185,72 @@ sp.open( function( error ) {
     if( error ) {
         console.log( "ERROR - Can't Opent Serial Port!" );
     } else {
-    cs.sys_say( "client_ready" );
-sp.on("data", function (data) {
-  console.log("here: "+data);
-  if( data.indexOf( "{" ) == 0 && data.indexOf( "}" ) == data.length - 1 ) {
-    var obj = JSON.parse( data );
-    if( obj.hasOwnProperty( 'query' ) ) {
-        var theCursor = cd.getCursor();
-        switch( obj.query ) {
-            case "line" :
-                var target = 10;
-                var cLine = theCursor.line;
-                if( cLine < 10 ) {
-                    target = cLine;
-                    sp.write( target + "\n" );
+        console.log( "SUCCESS - Serial Port Opened Successfully!" );
+        cs.sys_say( "client_ready" );
+        sp.on("data", function (data) {
+            console.log("here: "+data);
+            if( data.indexOf( "{" ) == 0 && data.indexOf( "}" ) == data.length - 1 ) {
+                var obj = JSON.parse( data );
+                if( obj.hasOwnProperty( 'query' ) ) {
+                    var theCursor = cd.getCursor();
+                    switch( obj.query ) {
+                        case "line" :
+                            var target = 10;
+                            var cLine = theCursor.line;
+                            if( cLine < 10 ) {
+                                target = cLine;
+                                sp.write( target + "\n" );
+                            }
+                        break;
+                        case "word" :
+                            var target = 10;
+                            var cWord = theCursor.word;
+                            if( cWord < 10 ) {
+                                target = cWord;
+                                sp.write( target + "\n" );
+                            }
+                        break;
+                        case "char" :
+                            var target = 10;
+                            var cChar = theCursor.char;
+                            if( cChar < 10 ) {
+                                target = cChar;
+                                sp.write( target + "\n" );
+                            }
+                        break;
+                    }
                 }
-            break;
-            case "word" :
-                var target = 10;
-                var cWord = theCursor.word;
-                if( cWord < 10 ) {
-                    target = cWord;
-                    sp.write( target + "\n" );
+            
+                if( obj.hasOwnProperty( 'jump' ) ){
+                    cd.updateCursorBase( obj.jump );
+                    console.log( "" );
                 }
-            break;
-            case "char" :
-                var target = 10;
-                var cChar = theCursor.char;
-                if( cChar < 10 ) {
-                    target = cChar;
-                    sp.write( target + "\n" );
+                if( obj.hasOwnProperty( 'read' ) ){
+                    cd.updateCursor( obj.read, function( doRead ) {
+                        if( doRead ) { 
+                            console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                            console.log( cd.getCursor() );
+                            io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
+                            var tfs = cd.getTextForSpeech( obj.read );
+                            if( tfs != "" ) {
+                                if( obj.read.hasOwnProperty( 'char' ) )
+                                    cs.say( tfs, "punctuation" );
+                                else
+                                    cs.say( tfs );
+                            }
+                        } else {
+                            cs.sys_say( "no_more_text" );
+                        }
+                    } );
                 }
-            break;
-        }
-    }
-
-    if( obj.hasOwnProperty( 'jump' ) ){
-        cd.updateCursorBase( obj.jump );
-        console.log( "" );
-    }
-    if( obj.hasOwnProperty( 'read' ) ){
-        cd.updateCursor( obj.read, function( doRead ) {
-            if( doRead ) { 
-                console.log( ">>>>>>>>>> emitting cursorUpdate" );
-                console.log( cd.getCursor() );
-                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
-                var tfs = cd.getTextForSpeech( obj.read );
-                if( tfs != "" ) {
-                    if( obj.read.hasOwnProperty( 'char' ) )
-                        cs.say( tfs, "punctuation" );
-                    else
-                        cs.say( tfs );
+                if( obj.hasOwnProperty( 'speechrate' ) ){
+                    cs.setRate( obj.speechrate );
+                    cs.sys_say( "speechrate_adjusted" );
                 }
-            } else {
-                cs.sys_say( "no_more_text" );
             }
         } );
     }
-    if( obj.hasOwnProperty( 'speechrate' ) ){
-        cs.setRate( obj.speechrate );
-        cs.sys_say( "speechrate_adjusted" );
-    }
-  }
+
 });
 
 

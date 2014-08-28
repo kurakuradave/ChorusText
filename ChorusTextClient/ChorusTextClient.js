@@ -175,9 +175,8 @@ serialPort.list(function (err, ports) {
 // init serial port at /dev/ttyACM0
 sp = new SerialPort("/dev/ttyACM0", {
   parser: serialPort.parsers.readline("\n"), 
-  baudrate : 9600,
-  false
-});
+  baudrate : 9600
+}, false);
 
 
 
