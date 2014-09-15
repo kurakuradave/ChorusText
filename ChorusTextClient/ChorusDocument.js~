@@ -8,11 +8,11 @@ var ctCursor = { 'line' : 0,
                  'baseWord' : 0,
                  'baseChar' : 0,
                  'getLine' : function() { return this.line; },
-                 'setLine' : function( val ) { this.line = this.baseLine + parseInt( val ); },
+                 'setLine' : function( val ) { this.line = this.baseLine + parseInt( val ); if( this.line>=lines.length ) this.line = lines.length - 1; },
                  'getWord' : function() { return this.word; },
-                 'setWord' : function( val ) { this.word = this.baseWord + parseInt( val ); },
+                 'setWord' : function( val ) { this.word = this.baseWord + parseInt( val ); if( this.word>=lines[ this.line ].words.length ) this.word = lines[ this.line ].words.length - 1; if( this.word < 0 ) this.word = 0 },
                  'getChar' : function() { return this.char; },
-                 'setChar' : function( val ) { this.char = this.baseChar + parseInt( val ); },
+                 'setChar' : function( val ) { this.char = this.baseChar + parseInt( val ); if( this.char>=lines[ this.line ].words[ this.word ].chars.length ) this.char = lines[ this.line ].words[ this.word ].chars.length - 1; if( this.char < 0 ) this.char = 0; },
                  'getBaseLine' : function() { return this.baseLine; },
                  'setBaseLine' : function( val ) { 
                                      var tlines = lines.length;
@@ -21,7 +21,7 @@ var ctCursor = { 'line' : 0,
                                          this.baseLine = 0;
                                      } else {
                                          var pVal = parseInt( val ); 
-                                         this.baseLine = pVal; 
+                                         this.baseLine = pVal;
                                          if( this.baseLine < 0 ) 
                                              this.baseLine = 0; 
                                          else if( this.baseLine > lines.length - 1 ) 
@@ -29,18 +29,22 @@ var ctCursor = { 'line' : 0,
                                      }
                                  },
                  'getBaseWord' : function() { return this.baseWord; },
-                 'setBaseWord' : function( val ) { 
-                                     var twords = lines[this.line].words.length;
-                                     if( twords <= 0 ) {
-                                         //console.log( "twords is an empty array, setting baseWord to 0" );
-                                         this.baseWord = 0;
-                                     } else {
-                                         var pVal = parseInt( val ); 
-                                         this.baseWord = pVal; 
-                                         if( this.baseWord < 0 ) 
-                                             this.baseWord = 0; 
-                                         else if( this.baseWord > lines[ this.line ].words.length - 1 ) 
-                                             this.baseWord = lines[this.line].words.length - 1; 
+                 'setBaseWord' : function( val ) {
+                                     if( this.line < lines.length ) {
+                                         var twords = lines[this.line].words.length;
+                                         if( twords <= 0 ) {
+                                             //console.log( "twords is an empty array, setting baseWord to 0" );
+                                             this.baseWord = 0;
+                                         } else {
+                                             var pVal = parseInt( val ); 
+                                             this.baseWord = pVal; 
+                                             if( this.baseWord < 0 ) 
+                                                 this.baseWord = 0; 
+                                             else if( this.baseWord > lines[ this.line ].words.length - 1 ) 
+                                                 this.baseWord = lines[this.line].words.length - 1; 
+                                         }
+                                     } else { 
+                                         this.baseWord = 0; // line out of range, set baseWord to 0
                                      }
                                  },
                  'getBaseChar' : function() { return this.baseChar; },
@@ -162,7 +166,6 @@ var buildVisualText = function() {
 
 
 var updateCursor = function( tactileInputObj, callback ) {
-console.log( tactileInputObj );
     // determine which element to update: line/word/char
     if( tactileInputObj.hasOwnProperty( 'char' ) ){
         console.log( "     tactileInputObj hasOwnProperty char" );
@@ -191,7 +194,7 @@ console.log( tactileInputObj );
         setCursorBaseChar( "top" );
         setCursorLine( tactileInputObj.line, function( doRead ) {  
                 if( doRead ) callback( true ); else callback();
-        } );  
+        } );
     }
 };
 
@@ -216,7 +219,6 @@ updateCursorBase = function( tactileInputObj ) {
 setCursorBaseChar = function( textVal ) {
     // textVal is one of: "top" / "scrollup" / "scrolldown" / "bottom"
     if( textVal == "top" ){
-        console.log( "        inside setCursorBaseChar()... setting baseChar to 0" );
         ctCursor.setBaseChar( 0 );
         ctCursor.setChar( 0 );
     }

@@ -4,6 +4,7 @@ var speechRate = 350;
 var language = "en";
 var speechText = "";
 var speechPID;
+var langIndex = 0;
 var supportedLanguages = [ "English", "Indonesian", "Chinese" ]
 
 
@@ -31,11 +32,36 @@ var setLanguage = function( val ) {
     val = val.toLowerCase();
     if( val == "chinese" ) {
         language = "zh";
+        langIndex = 2;
     } else if( val == "indonesian" ) {
         language = "id";
+        langIndex = 1;
     } else {
         language = "en";
+        langIndex = 0;
     }
+    this.sys_say( "language_set" ) ;
+}
+
+
+
+
+var getLanguage = function() {
+    return supportedLanguages[ langIndex ];
+}
+
+
+
+
+var toggleLang = function( dir ) {
+    if( dir == "next" ) {
+        langIndex ++;
+        if( langIndex > 2 ) langIndex = 0;
+    } else if( dir == "prev" ) {
+        langIndex --;
+        if( langIndex < 0 ) langIndex = 2;
+    }
+    this.setLanguage( supportedLanguages[ langIndex ] );
 }
 
 
@@ -114,6 +140,46 @@ var getSupportedLanguages = function() {
 var sys_say = function( sys_msg_code ) {
     var sys_msg_full = "";
     switch( sys_msg_code ) {
+        case "settings" :
+            sys_msg_full = "Settings - press the left or right button to cycle through available languages. More setting options will be available here in future versions."
+            if( language == "id" ) {
+               sys_msg_full = "Pengaturan ChorusText - Tekan tombol kiri atau kanan untuk mengganti bahasa yang sedang aktif. Pada versi berikutnya, akan ada lebih banyak pilihan pengaturan di sini.";
+            } else if ( language == "zh" ) {
+               sys_msg_full = ""; 
+            }            
+        break;
+        case "location" :
+            sys_msg_full = "Location - this feature is currently under development."
+            if( language == "id" ) {
+               sys_msg_full = "Lokasi - Fitur ini sedang dalam pengembangan.";
+            } else if ( language == "zh" ) {
+               sys_msg_full = ""; 
+            }            
+        break;
+        case "main" :
+            sys_msg_full = "Main - This is the main text area. Explore the text by moving the three sliders on the device."
+            if( language == "id" ) {
+               sys_msg_full = "Utama - Ini adalah bagian teks utama. Jelajahi teks ini dengan cara menggeser tiga knob yang tersedia pada permukaan alat ini.";
+            } else if ( language == "zh" ) {
+               sys_msg_full = ""; 
+            }            
+        break;
+        case "chat" :
+             sys_msg_full = "Chat - This feature is still under development";
+            if( language == "id" ) {
+               sys_msg_full = "Obrolan - Fitur ini sedang dalam pengembangan.";
+            } else if ( language == "zh" ) {
+               sys_msg_full = ""; 
+            }            
+        break;
+        case "find" :
+            sys_msg_full = "Find - This feature is currently under development";
+             if( language == "id" ) {
+               sys_msg_full = "Pencarian - Fitur ini sedang dalam pengembangan.";
+            } else if ( language == "zh" ) {
+               sys_msg_full = ""; 
+            }            
+        break;
         case "speechrate_adjusted" :
             sys_msg_full = "Speech rate adjusted to: " + speechRate + ".";
             if( language == "id" ) {
@@ -165,6 +231,8 @@ module.exports.getSettings = getSettings;
 module.exports.setRate = setRate;
 module.exports.getRate = getRate;
 module.exports.setLanguage = setLanguage;
+module.exports.getLanguage = getLanguage;
+module.exports.toggleLang = toggleLang;
 module.exports.say = say;
 module.exports.sys_say = sys_say;
 module.exports.killSpeech = killSpeech;

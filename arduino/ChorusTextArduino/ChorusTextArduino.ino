@@ -365,6 +365,7 @@ void CDial::processTactile() {
     _isSlotChanged = true;
     String myType = "dial";
     String msg = String( "{ \"turn\" : { \"" + myType + "\" : \"" ) + String( curSlot ) + String( "\" } }" );
+    // curSlot 0/1/2/3/4 is settings/location/main/chat/find
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
@@ -599,12 +600,10 @@ void loop() {
         charSlider.slideToTarget( 50 );
         Serial.println( "{\"jump\":{\"word\":\"bottom\"}}" );
       break;
-      case 16: // fringe top
+      case 16: // fringe bottom
         Serial.println( "{\"speechrate\":\"inc\"}" );
       break;
-      case 32: // fringe bottom
-        Serial.println( "{\"speechrate\":\"dec\"}" );
-      break;        
+
     }
   } else {
     if( switchVar2 == 0 ) {
@@ -633,6 +632,19 @@ void loop() {
         charSlider.slideToTarget( 950 );
         Serial.println( "{\"jump\":{\"char\":\"bottom\"}}" );
       break;
+      case 16: // dialbutton left
+        if( rotDial.getSlot() == 0 ) {   // settings  
+          Serial.println( "{\"togglelang\":\"prev\"}" );
+        } 
+      break;
+      case 32: // dialbutton right
+        if( rotDial.getSlot() == 0 ) { // settings
+          Serial.println( "{\"togglelang\":\"next\"}" );
+        }
+      break;        
+      case 64: // fringe top
+        Serial.println( "{\"speechrate\":\"dec\"}" );
+      break;              
     }
   } else {
     if( switchVar3 == 0 ) {

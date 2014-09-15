@@ -2,6 +2,7 @@
 // setup for Arduino communication
 // ==================================================
 var serialPort = require("serialport");
+var cFocus = 2;
 var cs = require( './ChorusSpeech.js' );
 var cd = require( './ChorusDocument.js' );
 var SerialPort = serialPort.SerialPort; // localize object constructor
@@ -129,9 +130,7 @@ io.on('connection', function(socket){
           console.log( "<<<<<<<<<< received applySettings" );
           console.log( "applying new settings" );
           cs.setRate( asObj.rate );
-          cs.setLanguage( asObj.lang );
-          cs.sys_say( "language_set" );
-        
+          cs.setLanguage( asObj.lang );        
       } );
 
 });
@@ -189,7 +188,7 @@ sp.open( function( error ) {
         sp.on("data", function (data) {
             console.log("here: "+data);
             if( data.indexOf( "{" ) == 0 ) {
-                var obj = JSON.parse( data );
+               var obj = JSON.parse( data );
                 if( obj.hasOwnProperty( 'query' ) ) {
                     var theCursor = cd.getCursor();
                     switch( obj.query ) {
@@ -219,31 +218,63 @@ sp.open( function( error ) {
                         break;
                     }
                 }
-            
+                if( obj.hasOwnProperty( 'turn' ) ) {
+                    console.log( obj );
+                    cFocus = parseInt(obj.turn.dial);
+                    console.log( cFocus );
+                    switch( cFocus ) {
+                        case 0 :
+                            cs.sys_say( "settings" );
+                        break;
+                        case 1 :
+                            cs.sys_say( "location" );
+                        break;
+                        case 2 :
+                            cs.sys_say( "main" );
+                        break;
+                        case 3 :
+                            cs.sys_say( "chat" );
+                        break;
+                        case 4 :
+                            cs.sys_say( "find" );
+                        break;
+                    }
+                }
+                if( obj.hasOwnProperty( 'togglelang' ) ) {
+                    cs.toggleLang( obj.togglelang );
+                    var lObj = { "lang" : cs.getLanguage()  };
+                    io.to( "settings" ).emit( 'langAdjusted', lObj );
+
+                }
                 if( obj.hasOwnProperty( 'jump' ) ){
-                    cd.updateCursorBase( obj.jump );
-                    console.log( "" );
+                    if( cFocus == 2 ) {
+                        cd.updateCursorBase( obj.jump );
+                    }
                 }
                 if( obj.hasOwnProperty( 'read' ) ){
-                    cd.updateCursor( obj.read, function( doRead ) {
-                        if( doRead ) { 
+                    if( cFocus == 2 ) {
+                        cd.updateCursor( obj.read, function( doRead ) {
+                            if( doRead ) { 
                             console.log( ">>>>>>>>>> emitting cursorUpdate" );
-                            console.log( cd.getCursor() );
-                            io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
-                            var tfs = cd.getTextForSpeech( obj.read );
-                            if( tfs != "" ) {
-                                if( obj.read.hasOwnProperty( 'char' ) )
-                                    cs.say( tfs, "punctuation" );
-                                else
-                                    cs.say( tfs );
+                                console.log( cd.getCursor() );
+                                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
+                                var tfs = cd.getTextForSpeech( obj.read );
+                                if( tfs != "" ) {
+                                    if( obj.read.hasOwnProperty( 'char' ) )
+                                        cs.say( tfs, "punctuation" );
+                                    else
+                                        cs.say( tfs );
+                                }
+                            } else {
+                                cs.sys_say( "no_more_text" );
                             }
-                        } else {
-                            cs.sys_say( "no_more_text" );
-                        }
-                    } );
+                        } );
+                    }
                 }
                 if( obj.hasOwnProperty( 'speechrate' ) ){
                     cs.setRate( obj.speechrate );
+                    var rObj = { "rate" : cs.getRate() };
+                    io.to( "settings" ).emit( 'rateAdjusted', rObj );
                     cs.sys_say( "speechrate_adjusted" );
                 }
             }

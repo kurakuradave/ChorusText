@@ -206,17 +206,6 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
 
 
-
-
-        socket.on( 'langAdjusted', function( lObj ) {  
-            console.log( "<<<<<<<<<< received langAdjusted" );
-            $scope.$apply( function() {
-                $scope.espeakSettings.lang = lObj.lang;
-            } );
-        } );
-
-
-
         $scope.init = function() {
             console.log( ">>>>>>>>>> emitting initForSettings" );
             socket.emit( 'initForSettings' );
