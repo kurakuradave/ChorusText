@@ -198,6 +198,7 @@ sp.open( function( error ) {
                             if( cLine < 10 ) {
                                 target = cLine;
                                 sp.write( target + "\n" );
+
                             }
                         break;
                         case "word" :
@@ -283,6 +284,38 @@ sp.open( function( error ) {
 
 });
 
+
+
+
+// keypress code
+
+var keypress = require('keypress')
+keypress(process.stdin)
+
+if (process.stdin.setRawMode)
+  process.stdin.setRawMode(true)
+else
+  require('tty').setRawMode(true)
+
+process.stdin.on('keypress', function (c, key) {
+  console.log(0, c, key)
+  if (key && key.ctrl && key.name == 'c') {
+    // do nothing
+    //process.stdin.pause()
+  } else {
+      cd.insert( key, function( data ) {  
+          if( data ) { 
+              var ulObj = data;
+              console.log( ">>>>>>>>>> emitting updateLines" );
+              io.to( "read" ).emit( 'updateLines', ulObj );
+          }
+      } );
+  }
+})
+  // disable mouse
+  //keypress.disableMouse(process.stdin)
+
+process.stdin.resume()
 
 
 

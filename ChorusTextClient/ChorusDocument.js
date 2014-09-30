@@ -125,7 +125,17 @@ var buildLine = function( someIndex, someLine ) {
 
     return { 'index' : someIndex, 
              'text' : someLine, 
-             'words' : wordObjs
+             'words' : wordObjs,
+             'rebuild' : function() {
+                 this.text = "";
+                 for( var i = 0; i < this.words.length; i++ ) {
+                     this.words[ i ].index = i;
+                     this.text += this.words[ i ].text + " ";
+                 }
+                 this.text.substring( 0, this.text.length - 1 );
+                 console.log( "line rebuilt!" );
+                 console.log( this );
+             }
     };
 };
 
@@ -143,7 +153,15 @@ var buildWord = function( someIndex, someWord ) {
 
     return { 'index' : someIndex, 
              'text' : someWord, 
-             'chars' : charObjs
+             'chars' : charObjs,
+             'rebuild' : function() {
+                 //console.log( "rebuilding characters..." );
+                 this.text = "";
+                 for( var i = 0; i < this.chars.length; i++ ) {
+                     this.chars[ i ].index = i;
+                     this.text += this.chars[ i ].text;
+                 }
+             }
     };
 };
 
@@ -159,7 +177,12 @@ var buildChar = function( someIndex, someChar ) {
 
 
 var buildVisualText = function() {
-  // later
+    this.visualText = "";
+    for( i = 0; i < lines.length; i++ ) {
+        lines[ i ].index = i;
+        visualText += lines[ i ].text + "\n";
+    }
+    visualText = visualText.substring( 0, visualText.length - 2 );
 };
 
 
@@ -413,6 +436,55 @@ var getCursor = function() {
 
 
 
+var insert = function( aKey, callback ) {
+    var theCursor = this.getCursor();
+    console.log( theCursor );
+    var theLine = lines[ theCursor.line ];
+    console.log( theLine );
+    var theWord = theLine.words[ theCursor.word ];
+    console.log( theWord );
+    var theChar = theLine.words[ theCursor.word ].chars[ theCursor.line ];
+    console.log( theChar );
+    
+    // determine the new char object
+    var newChar = { 'index': theCursor.char + 1, 'text' : aKey.sequence };
+
+    // insert the new char
+    theWord.chars.splice( (theCursor.char + 1 ), 0, newChar );
+   
+    // rebuild word line and visualtext 
+    /*theWord.text = "";
+    for( var i = 0; i < theWord.chars.length; i++ ) {
+        theWord.text += theWord.chars[ i ].text;
+    }*/
+    theWord.rebuild();
+
+    theLine.rebuild();
+
+    this.buildVisualText();
+
+    // update cursor
+    ctCursor.setChar( theCursor.char  + 1 );
+    console.log( "now ctCursor.char is " + ctCursor.getChar() );
+
+    // do callback for socket
+    theCursor.char++;
+    var changedLines = [];
+    changedLines.push( theLine );
+    var data = { 'changedLines': changedLines,'cursor': theCursor };
+    callback( data );
+}
+
+
+
+
+
+
+
+
+
+
+
 module.exports.setVisualText = setVisualText;
 module.exports.parseToCTDocu = parseToCTDocu;
 module.exports.buildVisualText = buildVisualText;
@@ -424,3 +496,4 @@ module.exports.getCursorWord = getCursorWord;
 module.exports.getCursorChar = getCursorChar;
 module.exports.getCursor = getCursor;
 module.exports.getLines = getLines;
+module.exports.insert = insert;

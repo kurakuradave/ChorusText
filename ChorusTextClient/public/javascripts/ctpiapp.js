@@ -71,6 +71,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
 
         $scope.render = function( lines, cursor ) {
+            console.log( cursor );
             var ret = [];
             var focusedLine= cursor.line;
             var focusedWord = cursor.word;
@@ -139,6 +140,31 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
             $scope.$apply( function() {
                 $scope.lines = ifrObj.lines;
                 $scope.cursor = ifrObj.cursor;
+                $scope.renderedLines = $scope.render( $scope.lines, $scope.cursor );
+            } );
+        } );
+
+
+
+
+        socket.on( 'updateLines', function( ulObj ) {  
+            $scope.$apply( function() {
+                // cut $scope.loines into head and tail, and later combine into: head, newline(s), and tail.
+                var cutpoint = ulObj.changedLines[0].index;
+                var head = [];
+                for( var i = 0; i < cutpoint; i++ ){
+                    head.push( $scope.lines[ i ] );
+                }
+
+                var tail = [];
+                for( var i = cutpoint + 1; i < $scope.lines.length; i++ ) {
+                    tail.push( $scope.lines[ i ] );
+                }
+
+                var newLines = head.concat( ulObj.changedLines ).concat( tail );
+                console.log( newLines );
+                $scope.lines = newLines;
+                $scope.cursor = ulObj.cursor;
                 $scope.renderedLines = $scope.render( $scope.lines, $scope.cursor );
             } );
         } );
