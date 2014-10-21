@@ -6,6 +6,7 @@
 
 #include <Wire.h>
 #include <PID_v1.h>
+#include <Adafruit_ADS1015.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_PWMServoDriver.h"
 #include <PID_v1.h>
@@ -139,12 +140,12 @@ void CSlider::processTactile() {
 
   if( curSlot != oldSlot ) {
     _isSlotChanged = true;
-    String myType = "char";
+    String myType = "c";
     if( _sliderKind == 1 )
-      myType = "line";
+      myType = "l";
     else if( _sliderKind == 2 )
-      myType = "word";
-    String msg = String( "{\"read\":{\"" + myType + "\":\"" ) + String( curSlot ) + String( "\"}}" );
+      myType = "w";
+    String msg = String( "{\"r\":{\"" + myType + "\":\"" ) + String( curSlot ) + String( "\"}}" );
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
@@ -215,8 +216,8 @@ void CSlider::slide() {
 
     if( abs( _input - _setpoint ) > PID_ERROR_MARGIN ) { // target not yet reached
       _sliderPID.Compute();
-      if( _output > 180 )    // upper cap to sliding speed
-        _output = 180;
+      if( _output > 220 )    // upper cap to sliding speed
+        _output = 220;
       if( _output > 80 ) {   // lower cap ( these need tweaking to get right )
         _motor->setSpeed( _output );
         if( _slideDirection == -1 ) {
@@ -250,7 +251,7 @@ void CSlider::slide() {
 class CDial {
  
   private:
-        int _pin;                     // the pin number on the Arduino that this dial's pot is hooked up to
+        int _pin;                     // the pin number on the  that this dial's pot is hooked up to
         const byte PID_ERROR_MARGIN;  // tolerable overshoot or undershoot distance from the target
         Adafruit_DCMotor *_motor;     // which motor port (1/2/3/4) on the Adafruit Motor Shield is this dial hooked up to
              
@@ -363,8 +364,8 @@ void CDial::processTactile() {
 
   if( curSlot != oldSlot ) {
     _isSlotChanged = true;
-    String myType = "dial";
-    String msg = String( "{ \"turn\" : { \"" + myType + "\" : \"" ) + String( curSlot ) + String( "\" } }" );
+    String myType = "d";
+    String msg = String( "{\"t\":{\"" + myType + "\":\"" ) + String( curSlot ) + String( "\" } }" ); // turn dial x
     // curSlot 0/1/2/3/4 is settings/location/main/chat/find
     Serial.println( msg ); 
   } else {
@@ -458,6 +459,11 @@ Adafruit_DCMotor *wMotor = AFMS.getMotor(2);
 Adafruit_DCMotor *cMotor = AFMS.getMotor(3);
 Adafruit_DCMotor *rMotor = AFMS.getMotor(4);
 
+Adafruit_ADS1115 ads1115;
+int16_t old_adc3 = 0;
+int16_t old_adc2 = 0;
+int old_sg = 0;
+int old_sc = 0;
 //define shift-in register pins
 int latchPin = 8;
 int dataPin = 9;
@@ -494,6 +500,10 @@ String queryType = "";
 
 
 void setup() {
+   ads1115.begin(); // Initialize ads1115
+   old_sg = floor( ads1115.readADC_SingleEnded( 2 ) / 600 ) * 10 + 50;
+   old_sc = floor( ads1115.readADC_SingleEnded( 3 ) / 600 ) * 10 + 50;
+
   Serial.begin( 9600 );
 
   //define pin modes for the shift-in register
@@ -536,6 +546,18 @@ void loop() {
   switchVar2 = shiftIn(dataPin, clockPin);
   switchVar3 = shiftIn(dataPin, clockPin);
 
+  // debug 
+  /*
+  if( switchVar1 != 0 ) {
+  Serial.println( switchVar1 );
+  }
+    if( switchVar2 != 0 ) {
+  Serial.println( switchVar2 );
+  }
+    if( switchVar3 != 0 ) {
+  Serial.println( switchVar3 );
+  }
+  */
   if( switchVar1 != 0 && oldSwitchVar1 == 0 ) {
     oldSwitchVar1 = switchVar1;
     switch( switchVar1 ) {
@@ -543,27 +565,40 @@ void loop() {
         lineSlider.slideToTarget( 50 );
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"line\":\"top\"}}" );
+        Serial.println( "{\"j\":{\"l\":\"t\"}}" ); // jump line top
+      break;
       case 2: // scroll up
         lineSlider.slideToTarget( 950 );
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"line\":\"scrollup\"}}" );
+        Serial.println( "{\"j\":{\"l\":\"u\"}}" ); // jump line scrollup
         queryType = "line";
-        Serial.println( "{\"query\":\"line\"}" );      break;
-
+        Serial.println( "{\"q\":\"l\"}" ); // query line
       break;
       case 4: // scroll down
         lineSlider.slideToTarget( 50 );
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"line\":\"scrolldown\"}}" );
+        Serial.println( "{\"j\":{\"l\":\"d\"}}" ); // jump line scrolldown
       break;
       case 8: // go bottom
         lineSlider.slideToTarget( 950 );
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"line\":\"bottom\"}}" );
+        Serial.println( "{\"j\":{\"l\":\"b\"}}" ); // jump line bottom
+      break;
+      case 16: // read all
+        Serial.println( "{\"r\":\"a\"}" ); // read all
+      break;
+      case 32: // OCR
+        Serial.println( "{\"o\":\"o\"}" ); // OCR
+      break;
+      case 64: // cycle language
+        Serial.println( "{\"l\":\"c\"}" ); // language cycle
+      break;
+      case 128: // read current
+        String msg = String( "{\"r\":{\"l\":" ) + String( lineSlider.getSlot() ) + String( "}}" );
+        Serial.println( msg );
       break;
     }
   } else {
@@ -578,32 +613,29 @@ void loop() {
       case 1: // go top
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"word\":\"top\"}}" );
-
+        Serial.println( "{\"j\":{\"w\":\"t\"}}" ); // jump word top
       break;
       case 2: // scroll up
         wordSlider.slideToTarget( 950 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"word\":\"scrollup\"}}" );
+        Serial.println( "{\"j\":{\"w\":\"u\"}}" ); // jump word scrollup
         queryType = "word";
-        Serial.println( "{\"query\":\"word\"}" );
-        queryType = "word";
-        Serial.println( "{\"query\":\"word\"}" );
+        Serial.println( "{\"q\":\"w\"}" ); // query word
       break;
       case 4: // scroll down
         wordSlider.slideToTarget( 50 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"word\":\"scrolldown\"}}" );
+        Serial.println( "{\"j\":{\"w\":\"d\"}}" ); // jump word scrolldown
       break;
       case 8: // go bottom
         wordSlider.slideToTarget( 950 );
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"word\":\"bottom\"}}" );
+        Serial.println( "{\"j\":{\"w\":\"b\"}}" ); // jump word bottom
       break;
-      case 16: // fringe bottom
-        Serial.println( "{\"speechrate\":\"inc\"}" );
+      case 128: // read current
+        String msg = String( "{\"r\":{\"w\":" ) + String( wordSlider.getSlot() ) + String( "}}" );
+        Serial.println( msg );
       break;
-
     }
   } else {
     if( switchVar2 == 0 ) {
@@ -616,48 +648,56 @@ void loop() {
     switch( switchVar3 ) {
       case 1: // go top
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"char\":\"top\"}}" );
+        Serial.println( "{\"j\":{\"c\":\"t\"}}" ); // jump char top
       break;
       case 2: // scroll up
         charSlider.slideToTarget( 950 );
-        Serial.println( "{\"jump\":{\"char\":\"scrollup\"}}" );
+        Serial.println( "{\"j\":{\"c\":\"u\"}}" ); // jump char scrollup
         queryType = "char";
-        Serial.println( "{\"query\":\"char\"}" );
+        Serial.println( "{\"q\":\"c\"}" ); // query char
       break;
       case 4: // scroll down
         charSlider.slideToTarget( 50 );
-        Serial.println( "{\"jump\":{\"char\":\"scrolldown\"}}" );
+        Serial.println( "{\"j\":{\"c\":\"d\"}}" ); // jump char scrolldown
       break;
       case 8: // go bottom
         charSlider.slideToTarget( 950 );
-        Serial.println( "{\"jump\":{\"char\":\"bottom\"}}" );
+        Serial.println( "{\"j\":{\"c\":\"b\"}}" ); // jump char bottom
       break;
       case 16: // dialbutton left
         if( rotDial.getSlot() == 0 ) {   // settings  
-          Serial.println( "{\"togglelang\":\"prev\"}" );
+          Serial.println( "{\"m\":\"u\"}" );    // menu up
         } 
       break;
       case 32: // dialbutton right
         if( rotDial.getSlot() == 0 ) { // settings
-          Serial.println( "{\"togglelang\":\"next\"}" );
+          Serial.println( "{\"m\":\"d\"}" );    // menu down
         }
       break;        
-      case 64: // fringe top
-        Serial.println( "{\"speechrate\":\"dec\"}" );
-      break;              
+      case 128: // read current
+        String msg = String( "{\"r\":{\"c\":" ) + String( charSlider.getSlot() ) + String( "}}" );
+        Serial.println( msg );
+      break;      
     }
   } else {
     if( switchVar3 == 0 ) {
       oldSwitchVar3 = 0;
     } 
   }
-
+  
+   int16_t adc2, adc3;
+   adc2 = ads1115.readADC_SingleEnded(2);
+   adc3 = ads1115.readADC_SingleEnded(3);
+   updateSpeechRate( "sg", adc2, old_adc2, old_sg );
+   updateSpeechRate( "sc", adc3, old_adc3, old_sc );
+    
   // process Sliders
-  uint8_t i;
+  //uint8_t i;
   
   rotDial.readDialValue();
-  if( rotDial.getIsMoving() )  
+  if( rotDial.getIsMoving() ){  
     rotDial.rotate();
+  }
   else
     rotDial.processTactile();
 
@@ -678,9 +718,10 @@ void loop() {
 // line slider routines
 //=================
   lineSlider.readSliderValue();
-  if( lineSlider.getIsMoving() )  // this means that, in the current loop() cycle the slider is in motion - trying to complete its travel to the target position, which was set by slideToTarget() in a previous loop() cycle.
+  if( lineSlider.getIsMoving() ) { // this means that, in the current loop() cycle the slider is in motion - trying to complete its travel to the target position, which was set by slideToTarget() in a previous loop() cycle.
 // do not disrupt it, just let it finish running its course
     lineSlider.slide();
+  }
   else 
     lineSlider.processTactile(); // only do this if slider has reached target +/- pid error margin around target position
   // below should be refactored and placed inside processTactile()
@@ -696,8 +737,9 @@ void loop() {
 // word slider routines
 //==================
   wordSlider.readSliderValue();
-  if( wordSlider.getIsMoving() )  
+  if( wordSlider.getIsMoving() ) {  
     wordSlider.slide();
+  }
   else 
     wordSlider.processTactile();
   // below should be refactord to be inside processTactile()
@@ -712,8 +754,9 @@ void loop() {
 // char slider routines
 //==================
   charSlider.readSliderValue();
-  if( charSlider.getIsMoving() )  
+  if( charSlider.getIsMoving() ) {
     charSlider.slide();
+  }
   else 
     charSlider.processTactile();
   // charSlider doesnt have a dependant
@@ -750,6 +793,19 @@ byte shiftIn(int myDataPin, int myClockPin) {
     digitalWrite(myClockPin, 1);
   }
   return myDataIn;
+}
+
+
+
+void updateSpeechRate( String name, int16_t val, int16_t &old_val, int &old_sr ) {
+     if( abs( old_val - val ) > 30 ) { 
+       int r = floor( val / 600 ) * 10 + 50;
+       if( r != old_sr ) {
+         Serial.println( String("{\""+ name + "\":") + String( r ) + String( "}" ) ); 
+         old_sr = r;
+       }
+       old_val = val;
+     }
 }
 
 

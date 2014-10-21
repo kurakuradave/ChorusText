@@ -12,7 +12,9 @@ var ctCursor = { 'line' : 0,
                  'getWord' : function() { return this.word; },
                  'setWord' : function( val ) { this.word = this.baseWord + parseInt( val ); if( this.word>=lines[ this.line ].words.length ) this.word = lines[ this.line ].words.length - 1; if( this.word < 0 ) this.word = 0; },
                  'getChar' : function() { return this.char; },
-                 'setChar' : function( val ) { this.char = this.baseChar + parseInt( val ); if( this.char>=lines[ this.line ].words[ this.word ].chars.length ) this.char = lines[ this.line ].words[ this.word ].chars.length - 1; if( this.char < 0 ) this.char = 0; },
+                 'setChar' : function( val ) { 
+                                 this.char = this.baseChar + parseInt( val ); 
+                                 if( this.char>=lines[ this.line ].words[ this.word ].chars.length ) this.char = lines[ this.line ].words[ this.word ].chars.length - 1; if( this.char < 0 ) this.char = 0; },
                  'getBaseLine' : function() { return this.baseLine; },
                  'setBaseLine' : function( val ) { 
                                      var tlines = lines.length;
@@ -190,32 +192,32 @@ var buildVisualText = function() {
 
 var updateCursor = function( tactileInputObj, callback ) {
     // determine which element to update: line/word/char
-    if( tactileInputObj.hasOwnProperty( 'char' ) ){
-        console.log( "     tactileInputObj hasOwnProperty char" );
+    if( tactileInputObj.hasOwnProperty( 'c' ) ){ // char
+        console.log( "     tactileInputObj hasOwnProperty c" );
         if( getCursorLine() != -1 && getCursorWord() != -1 ) {
-            setCursorChar( tactileInputObj.char, function( doRead ) {  
+            setCursorChar( tactileInputObj.c, function( doRead ) {  
                 if( doRead ) callback( true ); else callback();
             } ); // baseChar offset is done in setChar() within Chursor object
         } 
     } 
 
-    if( tactileInputObj.hasOwnProperty( 'word' ) ){
-        console.log( "     tactileInputObj hasOwnProperty word" );
+    if( tactileInputObj.hasOwnProperty( 'w' ) ){
+        console.log( "     tactileInputObj hasOwnProperty w" );
         if( getCursorLine() != -1 ) {
             // reset dependant(s)
-            setCursorBaseChar( "top" );
-            setCursorWord( tactileInputObj.word, function( doRead ) {  
+            setCursorBaseChar( "t" );
+            setCursorWord( tactileInputObj.w, function( doRead ) {  
                 if( doRead ) callback( true ); else callback();
             } );
         }
     }
 
-    if( tactileInputObj.hasOwnProperty( 'line' ) ){
-        //console.log( "     tactileInputObj hasOwnProperty line" );
+    if( tactileInputObj.hasOwnProperty( 'l' ) ){ // line
+        //console.log( "     tactileInputObj hasOwnProperty l" );
         // reset dependant(s) first, otherwise it will trip upon new cursorline that has no words or chars
-        setCursorBaseWord( "top" );
-        setCursorBaseChar( "top" );
-        setCursorLine( tactileInputObj.line, function( doRead ) {  
+        setCursorBaseWord( "t" );
+        setCursorBaseChar( "t" );
+        setCursorLine( tactileInputObj.l, function( doRead ) {  
                 if( doRead ) callback( true ); else callback();
         } );
     }
@@ -225,14 +227,14 @@ var updateCursor = function( tactileInputObj, callback ) {
 
 
 updateCursorBase = function( tactileInputObj ) {
-    if( tactileInputObj.hasOwnProperty( 'char' ) ) {
-        setCursorBaseChar( tactileInputObj.char );
+    if( tactileInputObj.hasOwnProperty( 'c' ) ) { // char
+        setCursorBaseChar( tactileInputObj.c );
     }
-    if( tactileInputObj.hasOwnProperty( 'word' ) ) {
-        setCursorBaseWord( tactileInputObj.word );
+    if( tactileInputObj.hasOwnProperty( 'w' ) ) { // word
+        setCursorBaseWord( tactileInputObj.w );
     }
-    if( tactileInputObj.hasOwnProperty( 'line' ) ) {
-        setCursorBaseLine( tactileInputObj.line );
+    if( tactileInputObj.hasOwnProperty( 'l' ) ) { // line
+        setCursorBaseLine( tactileInputObj.l );
     }
 };
 
@@ -240,18 +242,18 @@ updateCursorBase = function( tactileInputObj ) {
 
 
 setCursorBaseChar = function( textVal ) {
-    // textVal is one of: "top" / "scrollup" / "scrolldown" / "bottom"
-    if( textVal == "top" ){
+    // textVal is one of: "t" / "u" / "d" / "b"
+    if( textVal == "t" ){ //top
         ctCursor.setBaseChar( 0 );
         ctCursor.setChar( 0 );
     }
-    if( textVal == "scrollup" ) {
+    if( textVal == "u" ) { // scrollup
         ctCursor.setBaseChar( ctCursor.getChar() - 9 );
     }
-    if( textVal == "scrolldown" ) {
+    if( textVal == "d" ) { // scrolldown
         ctCursor.setBaseChar( ctCursor.getChar() );
     }
-    if( textVal == "bottom" ) {
+    if( textVal == "b" ) { // bottom
         var posLastChar = lines[ ctCursor.getLine() ].words[ ctCursor.getWord() ].chars.length - 1;
         ctCursor.setChar( posLastChar );
         ctCursor.setBaseChar( posLastChar - 9 );
@@ -269,18 +271,18 @@ setCursorBaseChar = function( textVal ) {
 
 
 setCursorBaseWord = function( textVal ) {
-    // textVal is one of: "top" / "scrollup" / "scrolldown" / "bottom"
-    if( textVal == "top" ){
+    // textVal is one of: "t" / "u" / "d" / "b"
+    if( textVal == "t" ){ //top
         ctCursor.setBaseWord( 0 );
         ctCursor.setWord( 0 );
     }
-    if( textVal == "scrollup" ) {
+    if( textVal == "u" ) { // scrollup
         ctCursor.setBaseWord( ctCursor.getWord() - 9 );
     }
-    if( textVal == "scrolldown" ) {
+    if( textVal == "d" ) { // scrolldown
         ctCursor.setBaseWord( ctCursor.getWord() );
     }
-    if( textVal == "bottom" ) {
+    if( textVal == "b" ) { // bottom
         var posLastWord = lines[ ctCursor.getLine() ].words.length - 1;
         ctCursor.setWord( posLastWord );
         ctCursor.setBaseWord( posLastWord - 9 );
@@ -296,18 +298,18 @@ setCursorBaseWord = function( textVal ) {
 
 
 setCursorBaseLine = function( textVal ) {
-    // textVal is one of: "top" / "scrollup" / "scrolldown" / "bottom"
-    if( textVal == "top" ){
+    // textVal is one of: "t" / "u" / "d" / "b"
+    if( textVal == "t" ){ //top
         ctCursor.setBaseLine( 0 );
         ctCursor.setLine( 0 );
     }
-    if( textVal == "scrollup" ) {
+    if( textVal == "u" ) { //scrollup
         ctCursor.setBaseLine( ctCursor.getLine() - 9 );
     }
-    if( textVal == "scrolldown" ) {
+    if( textVal == "d" ) { // scrolldown
         ctCursor.setBaseLine( ctCursor.getLine() );
     }
-    if( textVal == "bottom" ) {
+    if( textVal == "b" ) { // bottom
         var posLastLine = lines.length - 1;
         ctCursor.setLine( posLastLine );
         ctCursor.setBaseLine( posLastLine - 9 );
@@ -325,13 +327,13 @@ setCursorBaseLine = function( textVal ) {
 
 var getTextForSpeech = function( tactileInputObj ) {
     var ret = "";
-    if( tactileInputObj.hasOwnProperty( 'line' ) ) {  
+    if( tactileInputObj.hasOwnProperty( 'l' ) ) { // line  
         var lIndex = getCursorLine();
         if( lIndex != -1 ) {
             var theLineObj = lines[ lIndex ];
             ret = theLineObj.text;
         }
-    } else if( tactileInputObj.hasOwnProperty( 'word' ) ) {
+    } else if( tactileInputObj.hasOwnProperty( 'w' ) ) { // word
         var lIndex = getCursorLine();
         if( lIndex != -1 ) {
             var wIndex = getCursorWord();
@@ -340,7 +342,7 @@ var getTextForSpeech = function( tactileInputObj ) {
                 ret = theWordObj.text;
             }
         }
-    } else if( tactileInputObj.hasOwnProperty( 'char' ) ) {
+    } else if( tactileInputObj.hasOwnProperty( 'c' ) ) { // char
         var lIndex = getCursorLine();
         if( lIndex != -1 ) {
             var wIndex = getCursorWord();
@@ -438,40 +440,59 @@ var getCursor = function() {
 
 var insert = function( aKey, callback ) {
     var theCursor = this.getCursor();
-    console.log( theCursor );
+    //console.log( theCursor );
     var theLine = lines[ theCursor.line ];
-    console.log( theLine );
+    //console.log( theLine );
     var theWord = theLine.words[ theCursor.word ];
-    console.log( theWord );
-    var theChar = theLine.words[ theCursor.word ].chars[ theCursor.line ];
-    console.log( theChar );
-    
+    //console.log( theWord );
+    var theChar = theLine.words[ theCursor.word ].chars[ theCursor.char ];
+    //console.log( theChar );
+    if( theCursor.char >= 9 ) {
+        theCursor.char = theCursor.char % 9;
+    }
+    console.log( "ctCursor.getBaseChar()" + ctCursor.getBaseChar() );
+    var theCharIndex = ctCursor.getBaseChar() + theCursor.char;
+    console.log( "inserting char at theCharIndex " + theCharIndex );
     // determine the new char object
-    var newChar = { 'index': theCursor.char + 1, 'text' : aKey.sequence };
+    var newChar = { 'index': theCharIndex + 1, 'text' : aKey.sequence };
 
     // insert the new char
-    theWord.chars.splice( (theCursor.char + 1 ), 0, newChar );
+    console.log( "02. splicing theWord.chars" );
+    theWord.chars.splice( (theCharIndex + 1 ), 0, newChar );
    
-    // rebuild word line and visualtext 
-    /*theWord.text = "";
-    for( var i = 0; i < theWord.chars.length; i++ ) {
-        theWord.text += theWord.chars[ i ].text;
-    }*/
+    console.log( "03. rebuilding theWord..." );
     theWord.rebuild();
 
+    console.log( "04. rebuilding theLine..." );
     theLine.rebuild();
 
+    console.log( "05. rebuilding visualText..." );
     this.buildVisualText();
 
     // update cursor
-    ctCursor.setChar( theCursor.char  + 1 );
-    console.log( "now ctCursor.char is " + ctCursor.getChar() );
+    console.log( "06. incrementing ctCursor.char... theCursor.char,newCharVal" );
+    console.log( theCursor.char );
+    var newCharVal = ( ctCursor.getBaseChar() + theCursor.char ) + 1;
+   console.log( newCharVal );
+   console.log( "setting ctCursor.BaseChar to " + " floor of newCharVal / 9 " + ( newCharVal / 9 ) + Math.floor( newCharVal / 9 ) * 9  );
+   ctCursor.setBaseChar( Math.floor( newCharVal / 9 ) * 9 );
+
+    if( newCharVal >= 9 ) { // increment base offset
+        newCharVal = newCharVal % 9;
+    }
+    console.log( "setting ctCursor.char to newCharVal, which is " + newCharVal );
+    ctCursor.setChar( newCharVal );
+    console.log( "ctCursor.getChar is " + ctCursor.getChar() );
+    //console.log( "07. now ctCursor.char is ctCursor.base-ctCursor.char-theCharindex++" + ctCursor.getBaseChar() + " " + ctCursor.getChar() + " " + ( theCharIndex + 1 ) );
 
     // do callback for socket
-    theCursor.char++;
+    console.log( "08. incrementing theCursor.char" );
+    theCursor.char += 1;
     var changedLines = [];
     changedLines.push( theLine );
-    var data = { 'changedLines': changedLines,'cursor': theCursor };
+    console.log( "09. preparing data..." );
+    var data = { 'changedLines': changedLines,'cursor': this.getCursor() };
+    console.log( "10. calling callback..." );
     callback( data );
 }
 

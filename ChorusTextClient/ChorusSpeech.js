@@ -1,6 +1,7 @@
 var spawn = require('child_process').spawn;
 var espeak;
 var speechRate = 350;
+var speechRateChar = 100; // for slower char by char spelling
 var language = "en";
 var speechText = "";
 var speechPID;
@@ -10,19 +11,18 @@ var supportedLanguages = [ "English", "Indonesian", "Chinese" ]
 
 
 
-var setRate = function( val ) {
-        if( val == "inc" ) { // coming from tactile input
-            speechRate += 10;
-        } else if ( val == "dec" ) {
-            speechRate -= 10;
-        } else { // coming from web interface
-            speechRate = parseInt( val );
-        }
+var setRate = function( kind, val ) {
+    val = parseInt( val );
     // boundary check
     if( val > 500 )
         val = 500;
     if( val < 25 )
         val = 25;
+    // assignment
+    if( kind == "char" ) 
+        speechRateChar = val;
+    else
+        speechRate = val;
 };
 
 
@@ -53,11 +53,11 @@ var getLanguage = function() {
 
 
 
-var toggleLang = function( dir ) {
-    if( dir == "next" ) {
+var cycleLang = function( dir ) {
+    if( dir == "u" || dir == "c") {
         langIndex ++;
         if( langIndex > 2 ) langIndex = 0;
-    } else if( dir == "prev" ) {
+    } else if( dir == "d" ) {
         langIndex --;
         if( langIndex < 0 ) langIndex = 2;
     }
@@ -76,8 +76,11 @@ var getSettings = function() {
 
 
 
-getRate = function() {
-    return speechRate;
+getRate = function( kind ) {
+    var ret = speechRate;
+    if( kind == "char" )
+        ret = speechRateChar;
+    return ret;
 }
 
 
@@ -92,7 +95,7 @@ var say = function( theText, withPunctuation ) {
     // spawn espeak
     speechText = theText;
     if( withPunctuation )
-        espeak = spawn( 'espeak', [ '--punct', '-s'+speechRate, '-v'+language, speechText ] );
+        espeak = spawn( 'espeak', [ '--punct', '-s'+speechRateChar, '-v'+language, speechText ] );
     else
         espeak = spawn( 'espeak', [ '-s'+speechRate, '-v'+language, speechText ] );    
 
@@ -188,6 +191,14 @@ var sys_say = function( sys_msg_code ) {
                sys_msg_full = "语言速度调整为：" + speechRate + "."; 
             }
         break;
+        case "speechrateChar_adjusted" :
+            sys_msg_full = "Spelling rate adjusted to: " + speechRateChar + ".";
+            if( language == "id" ) {
+               sys_msg_full = "Kecepatan pengejaan di-stel ke: " + speechRateChar + ".";
+            } else if ( language == "zh" ) {
+               sys_msg_full = "语言速度调整为：" + speechRateChar + "."; 
+            }
+        break;
         case "text_imported" :
             sys_msg_full = "New text imported successfully.";
             if( language == "id" ) {
@@ -232,7 +243,7 @@ module.exports.setRate = setRate;
 module.exports.getRate = getRate;
 module.exports.setLanguage = setLanguage;
 module.exports.getLanguage = getLanguage;
-module.exports.toggleLang = toggleLang;
+module.exports.cycleLang = cycleLang;
 module.exports.say = say;
 module.exports.sys_say = sys_say;
 module.exports.killSpeech = killSpeech;

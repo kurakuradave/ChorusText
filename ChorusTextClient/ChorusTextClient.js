@@ -129,7 +129,7 @@ io.on('connection', function(socket){
       socket.on( 'applySettings', function( asObj ) { 
           console.log( "<<<<<<<<<< received applySettings" );
           console.log( "applying new settings" );
-          cs.setRate( asObj.rate );
+          cs.setRate( "general", asObj.rate );
           cs.setLanguage( asObj.lang );        
       } );
 
@@ -155,7 +155,7 @@ cs.setLanguage( "english" );
 
 
 // set rate
-cs.setRate( rate );
+cs.setRate( "general", rate );
 
 
 
@@ -189,10 +189,10 @@ sp.open( function( error ) {
             console.log("here: "+data);
             if( data.indexOf( "{" ) == 0 ) {
                var obj = JSON.parse( data );
-                if( obj.hasOwnProperty( 'query' ) ) {
+                if( obj.hasOwnProperty( 'q' ) ) { // query
                     var theCursor = cd.getCursor();
-                    switch( obj.query ) {
-                        case "line" :
+                    switch( obj.q ) {
+                        case "l" : // line
                             var target = 10;
                             var cLine = theCursor.line;
                             if( cLine < 10 ) {
@@ -201,7 +201,7 @@ sp.open( function( error ) {
 
                             }
                         break;
-                        case "word" :
+                        case "w" : // word
                             var target = 10;
                             var cWord = theCursor.word;
                             if( cWord < 10 ) {
@@ -209,7 +209,7 @@ sp.open( function( error ) {
                                 sp.write( target + "\n" );
                             }
                         break;
-                        case "char" :
+                        case "c" : // char
                             var target = 10;
                             var cChar = theCursor.char;
                             if( cChar < 10 ) {
@@ -219,9 +219,9 @@ sp.open( function( error ) {
                         break;
                     }
                 }
-                if( obj.hasOwnProperty( 'turn' ) ) {
+                if( obj.hasOwnProperty( 't' ) ) { // turn
                     console.log( obj );
-                    cFocus = parseInt(obj.turn.dial);
+                    cFocus = parseInt(obj.t.d); // obj.turn.dial
                     console.log( cFocus );
                     switch( cFocus ) {
                         case 0 :
@@ -241,27 +241,33 @@ sp.open( function( error ) {
                         break;
                     }
                 }
-                if( obj.hasOwnProperty( 'togglelang' ) ) {
-                    cs.toggleLang( obj.togglelang );
+                if( obj.hasOwnProperty( 'l' ) ) {
+                    cs.cycleLang( obj.l );
                     var lObj = { "lang" : cs.getLanguage()  };
                     io.to( "settings" ).emit( 'langAdjusted', lObj );
-
                 }
-                if( obj.hasOwnProperty( 'jump' ) ){
+                
+                if( obj.hasOwnProperty( 'm' ) ) { // menu
+                    // TEMPORARILY, this cycles through available languages
+                    cs.cycleLang( obj.m );
+                    var lObj = { "lang" : cs.getLanguage()  };
+                    io.to( "settings" ).emit( 'langAdjusted', lObj );
+                }
+                if( obj.hasOwnProperty( 'j' ) ){ // jump
                     if( cFocus == 2 ) {
-                        cd.updateCursorBase( obj.jump );
+                        cd.updateCursorBase( obj.j );
                     }
                 }
-                if( obj.hasOwnProperty( 'read' ) ){
+                if( obj.hasOwnProperty( 'r' ) ){ // read
                     if( cFocus == 2 ) {
-                        cd.updateCursor( obj.read, function( doRead ) {
+                        cd.updateCursor( obj.r, function( doRead ) {
                             if( doRead ) { 
                             console.log( ">>>>>>>>>> emitting cursorUpdate" );
                                 console.log( cd.getCursor() );
                                 io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
-                                var tfs = cd.getTextForSpeech( obj.read );
+                                var tfs = cd.getTextForSpeech( obj.r );
                                 if( tfs != "" ) {
-                                    if( obj.read.hasOwnProperty( 'char' ) )
+                                    if( obj.r.hasOwnProperty( 'c' ) ) // char
                                         cs.say( tfs, "punctuation" );
                                     else
                                         cs.say( tfs );
@@ -272,11 +278,18 @@ sp.open( function( error ) {
                         } );
                     }
                 }
-                if( obj.hasOwnProperty( 'speechrate' ) ){
-                    cs.setRate( obj.speechrate );
-                    var rObj = { "rate" : cs.getRate() };
+                if( obj.hasOwnProperty( 'sg' ) ){
+                    cs.setRate( "general", obj.sg );
+                    var rObj = { "rate" : cs.getRate( "general" ) };
                     io.to( "settings" ).emit( 'rateAdjusted', rObj );
                     cs.sys_say( "speechrate_adjusted" );
+                }
+                if( obj.hasOwnProperty( 'sc' ) ){
+                    cs.setRate( "char", obj.sc );
+                    // web-interface - NOT YET
+                    //var rObj = { "rate" : cs.getRate( "char" ) };
+                    //io.to( "settings" ).emit( 'rateAdjusted', rObj );
+                    cs.sys_say( "speechrateChar_adjusted" );
                 }
             }
         } );
@@ -288,7 +301,7 @@ sp.open( function( error ) {
 
 
 // keypress code
-
+var arduinoSliderPromise = {};
 var keypress = require('keypress')
 keypress(process.stdin)
 
@@ -298,18 +311,38 @@ else
   require('tty').setRawMode(true)
 
 process.stdin.on('keypress', function (c, key) {
+
   console.log(0, c, key)
   if (key && key.ctrl && key.name == 'c') {
-    // do nothing
-    //process.stdin.pause()
+      // do nothing
+      //process.stdin.pause()
   } else {
+      //process.stdin.pause();
+      console.log( "01. calling cd.insert()..." );
       cd.insert( key, function( data ) {  
           if( data ) { 
+              console.log( "11. inside cd.insert() callback..." );
+              // send socket to update client display
               var ulObj = data;
-              console.log( ">>>>>>>>>> emitting updateLines" );
+              console.log( "13. >>>>>>>>>> emitting updateLines" );
               io.to( "read" ).emit( 'updateLines', ulObj );
+              if( arduinoSliderPromise ) {
+                  console.log( "cancelling timeout..." );
+                  clearTimeout( arduinoSliderPromise );                  
+              }
+              arduinoSliderPromise = setTimeout( function(){  
+                  console.log( "sending location updates for the sliders" );
+                  var cursorNow = cd.getCursor();
+                  var msg = "MS-" + cursorNow.line + "-" + cursorNow.word + "-" + cursorNow.char + "\n";
+                  console.log( msg );
+                  sp.write( msg ); 
+                  arduinoSliderPromise = null;
+              }, 1000 );
           }
       } );
+      //setTimeout( function() { 
+      //    process.stdin.resume();
+      //}, 1000 );
   }
 })
   // disable mouse

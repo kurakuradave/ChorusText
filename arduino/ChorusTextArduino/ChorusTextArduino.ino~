@@ -39,12 +39,13 @@ class CSlider {
             _isSlotChanged( false ),
             _input( 0 ), 
             _inputOld( 0 ), 
-            _setpoint( 50 ), 
+            _setpoint( 50 ),
+            _promisedSetpoint( -1 ); 
             _output( 0 ),
             _sliderPID( &_input, &_output, &_setpoint,2,0.025,0.25, DIRECT )
         {
         } 
-        double _input, _inputOld, _setpoint, _output;
+        double _input, _inputOld, _setpoint, _promisedSetpoin, _output;
         void slideToTarget( int theValue );
         byte toSlot( double theInput );
         byte getSlot();
@@ -55,7 +56,8 @@ class CSlider {
         void readSliderValue();
         bool getIsMoving();
         bool getIsSlotChanged();
-        void slide();        
+        void slide();
+        void setPromisedSetpoint( double val );        
 
     
 }; // end class header CSlider
@@ -236,10 +238,22 @@ void CSlider::slide() {
         _input = 1024 - _input;
       }
       _slideDirection = 1;
+      // initiate slide to promised setpoint if any
+      if( _promisedSetpoint != -1 ) {
+          slideToTarget( _promisedSetpoint );
+          _promisedSetpoint = -1;
+      }
       //showStatus();    // uncomment to check stuff
     }
 
 } // end slide()
+
+
+
+
+void CSlider::setPromisedSetpoint( double val ) {
+    _promisedSetpoint = val;
+}
        
 
 
@@ -485,6 +499,7 @@ CDial rotDial( 3, rMotor );
 
 // for incoming serial data
 int incomingNum = 0;
+String incomingString = "";
 
 // expecting target for which slider
 String queryType = "";
@@ -495,6 +510,7 @@ String queryType = "";
 
 void setup() {
   Serial.begin( 9600 );
+  Serial.setTimeout( 10 );
 
   //define pin modes for the shift-in register
   pinMode(latchPin, OUTPUT);
@@ -515,16 +531,22 @@ void setup() {
 void loop() {
   // process incoming Serial data
   if( Serial.available() > 0 ) {
-    incomingNum = Serial.parseInt();
-    if( queryType == "line" ){
-      lineSlider.slideToTarget( incomingNum * 100 + 50 );  
-    } else if ( queryType == "word" ){
-      wordSlider.slideToTarget( incomingNum * 100 + 50);
-    } else if( queryType == "char" ) {
-      charSlider.slideToTarget( incomingNum * 100 + 50 );
+    if( queryType != "" ) {
+      incomingNum = Serial.parseInt();
+      if( queryType == "line" ){
+        lineSlider.slideToTarget( incomingNum * 100 + 50 );  
+      } else if ( queryType == "word" ){
+        wordSlider.slideToTarget( incomingNum * 100 + 50);
+      } else if( queryType == "char" ) {
+        charSlider.slideToTarget( incomingNum * 100 + 50 );
+      }
+      queryType = "";
+      incomingNum = 0;
+    } else {
+      incomingString = Serial.readString();
+      carryOut( incomingString );
+      incomingString = "";
     }
-    queryType = "";
-    incomingNum = 0;
   }
 
   // process shift-in registers
@@ -719,6 +741,44 @@ void loop() {
   // charSlider doesnt have a dependant
 
 } // end loop()
+
+
+
+
+void carryOut( String theString ) {
+  // message format:
+  // M-L-0 or M-W-0 or T-D-2
+  // first char is action (M move, T turn, etc)
+  // second char is which entity to perform the action ( L Line slider, W Word slider, D Dial, etc )
+  // third char is to what extend to carry out the action ( 2 is to slot 2 , etc    
+  char action = theString.charAt( 0 );
+  char entity = theString.charAt( 2 );
+  int val = theString.charAt( 4 ) - '0';
+  
+  // see what action
+  if( action == 'M' ) { // move
+    double target = val * 100 + 50;
+    switch( entity ) {
+      case 'L':
+        lineSlider.setNewInput( target );
+        lineSlider.slideToTarget( target );  
+      break;
+      case 'W':
+        wordSlider.setNewInput( target );
+        wordSlider.slideToTarget( target );  
+      break;
+      case 'C':
+        // if idle, slideToTarget
+        if( charSlider.getIsMoving() == false ) {
+            charSlider.slideToTarget( target );  
+        } else {
+            // set promisedTarget
+            charSlider.setPromisedSetpoint( target );
+        }
+      break;
+    }
+  }    
+}
 
 
 
