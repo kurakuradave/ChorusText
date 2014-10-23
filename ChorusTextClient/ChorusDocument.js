@@ -438,6 +438,16 @@ var getCursor = function() {
 
 
 
+var getCursorBases = function() {
+    return { 'line' : ctCursor.getBaseLine(),
+             'word' : ctCursor.getBaseWord(),
+             'char' : ctCursor.getBaseChar()
+    }
+}
+
+
+
+
 var insert = function( aKey, callback ) {
     var theCursor = this.getCursor();
     //console.log( theCursor );
@@ -450,49 +460,50 @@ var insert = function( aKey, callback ) {
     if( theCursor.char >= 9 ) {
         theCursor.char = theCursor.char % 9;
     }
-    console.log( "ctCursor.getBaseChar()" + ctCursor.getBaseChar() );
+    //console.log( "ctCursor.getBaseChar()" + ctCursor.getBaseChar() );
     var theCharIndex = ctCursor.getBaseChar() + theCursor.char;
-    console.log( "inserting char at theCharIndex " + theCharIndex );
+    //console.log( "inserting char at theCharIndex " + theCharIndex );
+    
     // determine the new char object
     var newChar = { 'index': theCharIndex + 1, 'text' : aKey.sequence };
 
     // insert the new char
-    console.log( "02. splicing theWord.chars" );
+    //console.log( "splicing theWord.chars" );
     theWord.chars.splice( (theCharIndex + 1 ), 0, newChar );
    
-    console.log( "03. rebuilding theWord..." );
+    //console.log( "rebuilding theWord..." );
     theWord.rebuild();
 
-    console.log( "04. rebuilding theLine..." );
+    //console.log( "rebuilding theLine..." );
     theLine.rebuild();
 
-    console.log( "05. rebuilding visualText..." );
+    //console.log( "rebuilding visualText..." );
     this.buildVisualText();
 
     // update cursor
-    console.log( "06. incrementing ctCursor.char... theCursor.char,newCharVal" );
-    console.log( theCursor.char );
+    //console.log( "incrementing ctCursor.char... theCursor.char,newCharVal" );
+    //console.log( theCursor.char );
     var newCharVal = ( ctCursor.getBaseChar() + theCursor.char ) + 1;
-   console.log( newCharVal );
-   console.log( "setting ctCursor.BaseChar to " + " floor of newCharVal / 9 " + ( newCharVal / 9 ) + Math.floor( newCharVal / 9 ) * 9  );
-   ctCursor.setBaseChar( Math.floor( newCharVal / 9 ) * 9 );
+    //console.log( newCharVal );
+    //console.log( "setting ctCursor.BaseChar to " + " floor of newCharVal / 9 " + ( newCharVal / 9 ) + Math.floor( newCharVal / 9 ) * 9  );
+    ctCursor.setBaseChar( Math.floor( newCharVal / 9 ) * 9 );
 
     if( newCharVal >= 9 ) { // increment base offset
         newCharVal = newCharVal % 9;
     }
-    console.log( "setting ctCursor.char to newCharVal, which is " + newCharVal );
+    //console.log( "setting ctCursor.char to newCharVal, which is " + newCharVal );
     ctCursor.setChar( newCharVal );
-    console.log( "ctCursor.getChar is " + ctCursor.getChar() );
-    //console.log( "07. now ctCursor.char is ctCursor.base-ctCursor.char-theCharindex++" + ctCursor.getBaseChar() + " " + ctCursor.getChar() + " " + ( theCharIndex + 1 ) );
+    //console.log( "ctCursor.getChar is " + ctCursor.getChar() );
+    //console.log( "now ctCursor.char is ctCursor.base-ctCursor.char-theCharindex++" + ctCursor.getBaseChar() + " " + ctCursor.getChar() + " " + ( theCharIndex + 1 ) );
 
     // do callback for socket
-    console.log( "08. incrementing theCursor.char" );
+    //console.log( "incrementing theCursor.char" );
     theCursor.char += 1;
     var changedLines = [];
     changedLines.push( theLine );
-    console.log( "09. preparing data..." );
+    //console.log( "preparing data..." );
     var data = { 'changedLines': changedLines,'cursor': this.getCursor() };
-    console.log( "10. calling callback..." );
+    //console.log( "calling callback..." );
     callback( data );
 }
 
@@ -516,5 +527,6 @@ module.exports.getCursorLine = getCursorLine;
 module.exports.getCursorWord = getCursorWord;
 module.exports.getCursorChar = getCursorChar;
 module.exports.getCursor = getCursor;
+module.exports.getCursorBases = getCursorBases;
 module.exports.getLines = getLines;
 module.exports.insert = insert;

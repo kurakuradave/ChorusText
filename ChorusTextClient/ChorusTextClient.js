@@ -318,23 +318,26 @@ process.stdin.on('keypress', function (c, key) {
       //process.stdin.pause()
   } else {
       //process.stdin.pause();
-      console.log( "01. calling cd.insert()..." );
       cd.insert( key, function( data ) {  
           if( data ) { 
-              console.log( "11. inside cd.insert() callback..." );
               // send socket to update client display
               var ulObj = data;
-              console.log( "13. >>>>>>>>>> emitting updateLines" );
+              console.log( ">>>>>>>>>> emitting updateLines" );
               io.to( "read" ).emit( 'updateLines', ulObj );
               if( arduinoSliderPromise ) {
-                  console.log( "cancelling timeout..." );
                   clearTimeout( arduinoSliderPromise );                  
               }
               arduinoSliderPromise = setTimeout( function(){  
-                  console.log( "sending location updates for the sliders" );
+                  // send "MoveSliders" signal to Arduino
                   var cursorNow = cd.getCursor();
+                  var cursorBases = cd.getCursorBases();
+                  cursorNow.line = cursorNow.line - cursorBases.line;
+                  cursorNow.word = cursorNow.word - cursorBases.word;
+                  cursorNow.char = cursorNow.char - cursorBases.char;
                   var msg = "MS-" + cursorNow.line + "-" + cursorNow.word + "-" + cursorNow.char + "\n";
                   console.log( msg );
+                  var iseng = cd.getCursor();
+                  console.log( iseng );
                   sp.write( msg ); 
                   arduinoSliderPromise = null;
               }, 1000 );

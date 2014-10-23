@@ -28,7 +28,8 @@ class CSlider {
         PID _sliderPID;
         byte _sliderKind;             // 1 = Line, 2 = Word, 3 = Char
         bool _isSlotChanged;          // true if knob is resting on a different slot. A slider is divided into ten slots or regions each with an interval of 100, last slot has interval of 124, total of all slots is 1024 which is the full range of Arduino analog pin reading, and tied to full potentiometer track.
-   
+        byte _curSlot, _oldSlot;      // current and old slot position values
+        
     public:
         CSlider( byte sliderKind, int pin, Adafruit_DCMotor *motorAddress ) :
             _sliderKind( sliderKind ),
@@ -40,6 +41,8 @@ class CSlider {
             _isSlotChanged( false ),
             _input( 0 ), 
             _inputOld( 0 ), 
+            _curSlot( 0 ),
+            _oldSlot( 0 ),
             _setpoint( 50 ), 
             _output( 0 ),
             _sliderPID( &_input, &_output, &_setpoint,2,0.025,0.25, DIRECT )
@@ -103,8 +106,10 @@ void CSlider::showStatus() {
 void CSlider::slideToTarget( int theValue ) {
 // this will assign a new target for the slider to move to, as well as set it in motion
   _setpoint = theValue;
-  _input = toSlot( theValue );
-  _inputOld = _input;
+  _inputOld = theValue; // advance _inputOld to target value, otherwise a reset dependants will trigger when line/word sliders arrive at target value.
+  _curSlot = toSlot( theValue );
+  _oldSlot = _curSlot; // advance _oldSlot
+  _isSlotChanged = false; // because we're manually driving the slider here
   _isMoving = true;
 } // end slideToTarget()
 
@@ -135,17 +140,17 @@ void CSlider::processTactile() {
 // if yes, prepare a String message to send to the RPi
 // send it
 // then memorize knob's new position
-  int curSlot = toSlot( _input );
-  int oldSlot = toSlot( _inputOld );
+  _curSlot = toSlot( _input );
+  _oldSlot = toSlot( _inputOld );
 
-  if( curSlot != oldSlot ) {
+  if( _curSlot != _oldSlot ) {
     _isSlotChanged = true;
     String myType = "c";
     if( _sliderKind == 1 )
       myType = "l";
     else if( _sliderKind == 2 )
       myType = "w";
-    String msg = String( "{\"r\":{\"" + myType + "\":\"" ) + String( curSlot ) + String( "\"}}" );
+    String msg = String( "{\"r\":{\"" + myType + "\":\"" ) + String( _curSlot ) + String( "\"}}" );
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
@@ -218,19 +223,18 @@ void CSlider::slide() {
       _sliderPID.Compute();
       if( _output > 220 )    // upper cap to sliding speed
         _output = 220;
-      if( _output > 80 ) {   // lower cap ( these need tweaking to get right )
-        _motor->setSpeed( _output );
-        if( _slideDirection == -1 ) {
-          _motor->run( BACKWARD ); // reverse wiring on the motor shield if it slide to wrong direction
-        } 
-        else { 
-          _motor->run( FORWARD ); 
-        }
-        delay( 10 );
-        _motor->run(RELEASE );
+      if( _output < 200 )
+        _output = 200;
+      
+      _motor->setSpeed( _output );
+      if( _slideDirection == -1 ) {
+        _motor->run( BACKWARD ); // reverse wiring on the motor shield if it slide to wrong direction
+      }  else { 
+        _motor->run( FORWARD ); 
       }
-    } 
-    else { // target reached
+      delay( 10 );
+      _motor->run(RELEASE );
+    } else { // target reached
       _isMoving = false;
       if( _slideDirection == -1 ) { // if stopping after a -1 dir, then normalize
         _setpoint = 1024 - _setpoint;  
@@ -239,6 +243,7 @@ void CSlider::slide() {
       _slideDirection = 1;
       //showStatus();    // uncomment to check stuff
     }
+    _isSlotChanged = false;
 
 } // end slide()
        
@@ -259,6 +264,7 @@ class CDial {
         bool _isMoving;               // true if dial has not yet reached its target position +/- PID_ERROR_MARGIN 
         PID _dialPID;
         bool _isSlotChanged;          // true if dial is pointing on a different slot. A dial is divided into five slots or regions each with an interval of 200, last slot has interval of 224, total of all slots is 1024 which is the full range of Arduino analog pin reading, and tied to full potentiometer track.
+        byte _curSlot, _oldSlot;       // current and old slot position values
    
     public:
         CDial( int pin, Adafruit_DCMotor *motorAddress ) :
@@ -270,6 +276,8 @@ class CDial {
             _isSlotChanged( false ),
             _input( 512 ), 
             _inputOld( 512 ), 
+            _curSlot( 0 ),
+            _oldSlot( 0 ),
             _setpoint( 512 ), 
             _output( 0 ),
             _dialPID( &_input, &_output, &_setpoint,2,0.025,0.25, DIRECT )
@@ -359,14 +367,14 @@ void CDial::processTactile() {
 // if yes, prepare a String message to send to the RPi
 // send it
 // then memorize knob's new position
-  int curSlot = toSlot( _input );
-  int oldSlot = toSlot( _inputOld );
+  _curSlot = toSlot( _input );
+  _oldSlot = toSlot( _inputOld );
 
-  if( curSlot != oldSlot ) {
+  if( _curSlot != _oldSlot ) {
     _isSlotChanged = true;
     String myType = "d";
-    String msg = String( "{\"t\":{\"" + myType + "\":\"" ) + String( curSlot ) + String( "\" } }" ); // turn dial x
-    // curSlot 0/1/2/3/4 is settings/location/main/chat/find
+    String msg = String( "{\"t\":{\"" + myType + "\":\"" ) + String( _curSlot ) + String( "\" } }" ); // turn dial x
+    // _curSlot 0/1/2/3/4 is settings/location/main/chat/find
     Serial.println( msg ); 
   } else {
     _isSlotChanged = false;
@@ -491,6 +499,7 @@ CDial rotDial( 3, rMotor );
 
 // for incoming serial data
 int incomingNum = 0;
+String incomingString = "";
 
 // expecting target for which slider
 String queryType = "";
@@ -505,6 +514,7 @@ void setup() {
    old_sc = floor( ads1115.readADC_SingleEnded( 3 ) / 600 ) * 10 + 50;
 
   Serial.begin( 9600 );
+  Serial.setTimeout( 30 );
 
   //define pin modes for the shift-in register
   pinMode(latchPin, OUTPUT);
@@ -525,16 +535,31 @@ void setup() {
 void loop() {
   // process incoming Serial data
   if( Serial.available() > 0 ) {
-    incomingNum = Serial.parseInt();
-    if( queryType == "line" ){
-      lineSlider.slideToTarget( incomingNum * 100 + 50 );  
-    } else if ( queryType == "word" ){
-      wordSlider.slideToTarget( incomingNum * 100 + 50);
-    } else if( queryType == "char" ) {
-      charSlider.slideToTarget( incomingNum * 100 + 50 );
+    if( queryType != "" ) { // expecting a numeric return from client
+      incomingNum = Serial.parseInt();
+      if( queryType == "line" ){
+        lineSlider.slideToTarget( incomingNum * 100 + 50 );  
+      } else if ( queryType == "word" ){
+        wordSlider.slideToTarget( incomingNum * 100 + 50);
+      } else if( queryType == "char" ) {
+        charSlider.slideToTarget( incomingNum * 100 + 50 );
+      }
+      queryType = "";
+      incomingNum = 0;
+    } else { // default, parseString
+      incomingString = Serial.readString();
+      if( incomingString.substring( 0, 2 ) == "MS" ) { // Move Sliders
+        // format is always MS-X-X-X where Xs are slot numbers ( single digit ) for line, word and char, respectively
+        int cLine = incomingString.charAt( 3 ) - '0';
+        int cWord = incomingString.charAt( 5 ) - '0';
+        int cChar = incomingString.charAt( 7 ) - '0'; 
+        
+        lineSlider.slideToTarget( cLine * 100 + 50 );
+        wordSlider.slideToTarget( cWord * 100 + 50 );
+        charSlider.slideToTarget( cChar * 100 + 50 );
+        incomingString = "";
+      }
     }
-    queryType = "";
-    incomingNum = 0;
   }
 
   // process shift-in registers
