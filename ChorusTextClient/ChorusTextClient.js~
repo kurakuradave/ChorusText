@@ -1,3 +1,25 @@
+/*-----------------------------------------------------------------------------\
+|                                                                              |
+|    ChorusText - Open Assistive Device For People With Low-vision / Blindness |
+|    Copyright (C) 2014  David Effendi                                         |
+|    email: kurakuradave@gmail.com                                             |
+|                                                                              |
+|    This program is free software: you can redistribute it and/or modify      |
+|    it under the terms of the GNU General Public License as published by      |
+|    the Free Software Foundation, either version 3 of the License, or         |
+|    (at your option) any later version.                                       |
+|                                                                              |
+|    This program is distributed in the hope that it will be useful,           |
+|    but WITHOUT ANY WARRANTY; without even the implied warranty of            |
+|    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             |
+|    GNU General Public License for more details.                              |
+|                                                                              |
+|    You should have received a copy of the GNU General Public License         |
+|    along with this program.  If not, see <http://www.gnu.org/licenses/>.     |
+|                                                                              |
+\-----------------------------------------------------------------------------*/
+
+
 // ==================================================
 // setup for Arduino communication
 // ==================================================
@@ -10,9 +32,9 @@ var SerialPort = serialPort.SerialPort; // localize object constructor
 
 
 
-// ==================================================
-// setup for the PiServer - Express & Socket.io
-// ==================================================
+// ========================================================
+// setup for the Web Interface Server - Express & Socket.io
+// ========================================================
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');
@@ -273,6 +295,31 @@ sp.open( function( error ) {
                                 var tfs = cd.getTextForSpeech( obj.r );
                                 if( tfs != "" ) {
                                     if( obj.r.hasOwnProperty( 'c' ) ) // char
+                                        cs.say( tfs, "punctuation" );
+                                    else
+                                        cs.say( tfs );
+                                }
+                            } else {
+                                cs.sys_say( "no_more_text" );
+                            }
+                        } );
+                    }
+                }
+                if( obj.hasOwnProperty( 'v' ) ){ // verify current line/word/char
+                    if( cFocus == 2 ) {
+                        cd.updateCursor( obj.v, function( doRead ) {
+                            if( doRead ) { 
+                            console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                var theCursor = cd.getCursor();
+                                console.log( theCursor );
+                                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
+                                var theCursorBases = cd.getCursorBases();
+                                var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
+                                console.log( msg );
+                                sp.write( msg ); // this is the only line that differs from a "read" see above
+                                var tfs = cd.getTextForSpeech( obj.v );
+                                if( tfs != "" ) {
+                                    if( obj.v.hasOwnProperty( 'c' ) ) // char
                                         cs.say( tfs, "punctuation" );
                                     else
                                         cs.say( tfs );

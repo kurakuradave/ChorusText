@@ -1,3 +1,25 @@
+/*-----------------------------------------------------------------------------\
+|                                                                              |
+|    ChorusTextClient - Client program for ChorusText Open Assistive Device    |
+|    Copyright (C) 2014  David Effendi                                         |
+|    email: kurakuradave@gmail.com                                             |
+|                                                                              |
+|    This program is free software: you can redistribute it and/or modify      |
+|    it under the terms of the GNU General Public License as published by      |
+|    the Free Software Foundation, either version 3 of the License, or         |
+|    (at your option) any later version.                                       |
+|                                                                              |
+|    This program is distributed in the hope that it will be useful,           |
+|    but WITHOUT ANY WARRANTY; without even the implied warranty of            |
+|    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             |
+|    GNU General Public License for more details.                              |
+|                                                                              |
+|    You should have received a copy of the GNU General Public License         |
+|    along with this program.  If not, see <http://www.gnu.org/licenses/>.     |
+|                                                                              |
+\-----------------------------------------------------------------------------*/
+
+
 // ==================================================
 // setup for Arduino communication
 // ==================================================
@@ -10,9 +32,9 @@ var SerialPort = serialPort.SerialPort; // localize object constructor
 
 
 
-// ==================================================
-// setup for the PiServer - Express & Socket.io
-// ==================================================
+// ========================================================
+// setup for the Web Interface Server - Express & Socket.io
+// ========================================================
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');
