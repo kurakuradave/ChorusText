@@ -622,7 +622,7 @@ void loop() {
         Serial.println( "{\"l\":\"c\"}" ); // language cycle
       break;
       case 128: // read current
-        String msg = String( "{\"r\":{\"l\":" ) + String( lineSlider.getSlot() ) + String( "}}" );
+        String msg = String( "{\"v\":{\"l\":" ) + String( lineSlider.getSlot() ) + String( "}}" ); //verify current line
         Serial.println( msg );
       break;
     }
@@ -658,7 +658,7 @@ void loop() {
         Serial.println( "{\"j\":{\"w\":\"b\"}}" ); // jump word bottom
       break;
       case 128: // read current
-        String msg = String( "{\"r\":{\"w\":" ) + String( wordSlider.getSlot() ) + String( "}}" );
+        String msg = String( "{\"v\":{\"w\":" ) + String( wordSlider.getSlot() ) + String( "}}" ); // verify current word
         Serial.println( msg );
       break;
     }
@@ -700,7 +700,7 @@ void loop() {
         }
       break;        
       case 128: // read current
-        String msg = String( "{\"r\":{\"c\":" ) + String( charSlider.getSlot() ) + String( "}}" );
+        String msg = String( "{\"v\":{\"c\":" ) + String( charSlider.getSlot() ) + String( "}}" ); // verify current char
         Serial.println( msg );
       break;      
     }

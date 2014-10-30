@@ -263,8 +263,13 @@ sp.open( function( error ) {
                         cd.updateCursor( obj.r, function( doRead ) {
                             if( doRead ) { 
                             console.log( ">>>>>>>>>> emitting cursorUpdate" );
-                                console.log( cd.getCursor() );
-                                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : cd.getCursor() } );
+                                var theCursor = cd.getCursor();
+                                console.log( theCursor );
+                                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
+                                var theCursorBases = cd.getCursorBases();
+                                var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
+                                console.log( msg );
+                                //sp.write( msg );
                                 var tfs = cd.getTextForSpeech( obj.r );
                                 if( tfs != "" ) {
                                     if( obj.r.hasOwnProperty( 'c' ) ) // char
@@ -317,30 +322,59 @@ process.stdin.on('keypress', function (c, key) {
       // do nothing
       //process.stdin.pause()
   } else {
-      //process.stdin.pause();
-      cd.insert( key, function( data ) {  
-          if( data ) { 
-              // send socket to update client display
-              var ulObj = data;
-              console.log( ">>>>>>>>>> emitting updateLines" );
-              io.to( "read" ).emit( 'updateLines', ulObj );
-              if( arduinoSliderPromise ) {
-                  clearTimeout( arduinoSliderPromise );                  
+      if( key.name == "backspace" ){
+          cd.deleteChar( function( data ) {
+              if( data ) { 
+                  // send socket to update client display
+                  var ulObj = data;
+                  console.log( ">>>>>>>>>> emitting updateLines" );
+                  io.to( "read" ).emit( 'updateLines', ulObj );
+                  if( arduinoSliderPromise ) {
+                      clearTimeout( arduinoSliderPromise );                  
+                  }
+                  arduinoSliderPromise = setTimeout( function(){  
+                      // send "MoveSliders" signal to Arduino
+                      var cursorNow = cd.getCursor();
+                      var cursorBases = cd.getCursorBases();
+                      cursorNow.line = cursorNow.line - cursorBases.line;
+                       cursorNow.word = cursorNow.word - cursorBases.word;
+                      cursorNow.char = cursorNow.char - cursorBases.char;
+                      var msg = "MS-" + cursorNow.line + "-" + cursorNow.word + "-" + cursorNow.char + "\n";
+                      console.log( msg );
+                      var iseng = cd.getCursor();
+                      console.log( iseng );
+                      sp.write( msg ); 
+                      arduinoSliderPromise = null;
+                  }, 1000 );
               }
-              arduinoSliderPromise = setTimeout( function(){  
-                  // send "MoveSliders" signal to Arduino
-                  var cursorNow = cd.getCursor();
-                  var cursorBases = cd.getCursorBases();
-                  cursorNow.line = cursorNow.line - cursorBases.line;
-                  cursorNow.word = cursorNow.word - cursorBases.word;
-                  cursorNow.char = cursorNow.char - cursorBases.char;
-                  var msg = "MS-" + cursorNow.line + "-" + cursorNow.word + "-" + cursorNow.char + "\n";
-                  console.log( msg );
-                  sp.write( msg ); 
-                  arduinoSliderPromise = null;
-              }, 1000 );
-          }
-      } );
+          } );
+      } else {
+          cd.insertChar( key, function( data ) {  
+              if( data ) { 
+                  // send socket to update client display
+                  var ulObj = data;
+                  console.log( ">>>>>>>>>> emitting updateLines" );
+                  io.to( "read" ).emit( 'updateLines', ulObj );
+                  if( arduinoSliderPromise ) {
+                      clearTimeout( arduinoSliderPromise );                  
+                  }
+                  arduinoSliderPromise = setTimeout( function(){  
+                      // send "MoveSliders" signal to Arduino
+                      var cursorNow = cd.getCursor();
+                      var cursorBases = cd.getCursorBases();
+                      cursorNow.line = cursorNow.line - cursorBases.line;
+                       cursorNow.word = cursorNow.word - cursorBases.word;
+                      cursorNow.char = cursorNow.char - cursorBases.char;
+                      var msg = "MS-" + cursorNow.line + "-" + cursorNow.word + "-" + cursorNow.char + "\n";
+                      console.log( msg );
+                      var iseng = cd.getCursor();
+                      console.log( iseng );
+                      sp.write( msg ); 
+                      arduinoSliderPromise = null;
+                  }, 1000 );
+              }
+          } );
+      }
       //setTimeout( function() { 
       //    process.stdin.resume();
       //}, 1000 );

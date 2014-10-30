@@ -448,7 +448,51 @@ var getCursorBases = function() {
 
 
 
-var insert = function( aKey, callback ) {
+var deleteChar = function( callback ) {
+    var theCursor = this.getCursor();
+    //console.log( theCursor );
+    var theLine = lines[ theCursor.line ];
+    //console.log( theLine );
+    var theWord = theLine.words[ theCursor.word ];
+    //console.log( theWord );
+    var theChar = theLine.words[ theCursor.word ].chars[ theCursor.char ];
+    //console.log( theChar );
+    if( theCursor.char >= 9 ) {
+        theCursor.char = theCursor.char % 9;
+    }
+    //console.log( "ctCursor.getBaseChar()" + ctCursor.getBaseChar() );
+    var theCharIndex = ctCursor.getBaseChar() + theCursor.char;
+    //console.log( "deleting char at theCharIndex " + theCharIndex );
+
+    // delete the new char
+    //console.log( "splicing theWord.chars" );
+    theWord.chars.splice( (theCharIndex + 1 - 1 ), 1  );
+   
+    //console.log( "rebuilding theWord..." );
+    theWord.rebuild();
+
+    //console.log( "rebuilding theLine..." );
+    theLine.rebuild();
+
+    //console.log( "rebuilding visualText..." );
+    this.buildVisualText();
+
+    ctCursor.setChar( ctCursor.getChar() - 1 );
+    ctCursor.setBaseChar( Math.floor( ctCursor.getChar() / 9 ) * 9 );
+
+    // preparing callback for socket    
+    var changedLines = [];
+    changedLines.push( theLine );
+    //console.log( "preparing data..." );
+    var data = { 'changedLines': changedLines,'cursor': this.getCursor() };
+    //console.log( "calling callback..." );
+    callback( data );
+}
+
+
+
+
+var insertChar = function( aKey, callback ) {
     var theCursor = this.getCursor();
     //console.log( theCursor );
     var theLine = lines[ theCursor.line ];
@@ -529,4 +573,5 @@ module.exports.getCursorChar = getCursorChar;
 module.exports.getCursor = getCursor;
 module.exports.getCursorBases = getCursorBases;
 module.exports.getLines = getLines;
-module.exports.insert = insert;
+module.exports.insertChar = insertChar;
+module.exports.deleteChar = deleteChar;
