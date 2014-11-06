@@ -845,7 +845,7 @@ byte shiftIn(int myDataPin, int myClockPin) {
 
 
 void updateSpeechRate( String name, int16_t val, int16_t &old_val, int &old_sr ) {
-     if( abs( old_val - val ) > 30 ) { 
+     if( abs( old_val - val ) > 300 ) { 
        int r = floor( val / 600 ) * 10 + 50;
        if( r != old_sr ) {
          Serial.println( String("{\""+ name + "\":") + String( r ) + String( "}" ) ); 
