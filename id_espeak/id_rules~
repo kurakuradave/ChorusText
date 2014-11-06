@@ -1,0 +1,313 @@
+// This file is UTF8 encode 
+// Spelling-to-phoneme rules for Indonesian
+.group a
+        a        a
+     a) a        _|a
+    A_) a        _|a
+    au) a        _|a
+        ai       aI
+        au       aU
+// english:
+        able (_        _^_EN
+        ables (_        _^_EN
+        abled (_        _^_EN
+        abling (_        _^_EN
+        ac (_        _^_EN
+        acs (_        _^_EN
+        age (_        _^_EN
+        ages (_        _^_EN
+        aged (_        _^_EN
+        ary (_        _^_EN
+        aries (_        _^_EN
+        aried (_        _^_EN
+        arying (_        _^_EN
+        arry (_        _^_EN
+        arries (_        _^_EN
+        arried (_        _^_EN
+        arrying        (_        _^_EN
+//        al (_        _^_EN
+        ance (_        _^_EN
+        anced (_        _^_EN
+        ancy (_        _^_EN
+        ancies (_        _^_EN
+//        anda (_        _^_EN
+//        andum (_        _^_EN
+        ant (_        _^_EN
+        anted (_        _^_EN
+//        ar (_        _^_EN
+        archy (_        _^_EN
+        archies (_        _^_EN
+        ase (_        _^_EN
+        ases (_        _^_EN
+        ased (_        _^_EN
+        asm (_        _^_EN
+        asms (_        _^_EN
+        ate (_        _^_EN
+        ates (_        _^_EN
+        ated (_        _^_EN
+        ation (_        _^_EN
+        ations (_        _^_EN
+        ational (_        _^_EN
+//        al (_        _^_EN
+.group b
+        b        b
+     _) be (@@   b@
+     _) be (@P2  b@
+        be (bas  b'E
+        be (sar  b@
+        be (san  b'E
+     _) ber (@P3 b@R
+        be (n    b@
+// english:
+        ble (_        _^_EN
+        bled (_        _^_EN
+        bles (_        _^_EN
+        bling (_        _^_EN
+.group c
+        c        tS
+        ch       X
+// english:
+        cy (_        _^_EN
+        cies (_        _^_EN
+        cied (_        _^_EN
+        ch (_        _^_EN
+        ches (_        _^_EN
+        ched (_        _^_EN
+        ching (_        _^_EN
+.group d
+        d        d
+     _) de       d@
+        de (ka   d'E
+        de (kap  d@
+   mer) de (ka   d'E
+     _) de (mo   dE
+        den (_   d'En
+        dj       dZ     / Dutch
+.group e
+        e        E
+    Ce) e        E
+     e) e        _|E
+    A_) e        _|E
+        e (_     E
+        eh (_    Eh
+        en (_    En
+  meng) e        E
+  meng) e  (l    @
+  meng) e  (lo   E
+  meng) em       '@m
+  meng) e  (r    @
+  
+// english:
+        eak        (_        _^_EN
+        eaks        (_        _^_EN
+        eaked        (_        _^_EN
+        eaker        (_        _^_EN
+        eaking        (_        _^_EN
+        eakers        (_        _^_EN
+        ence (_        _^_EN
+        ency (_        _^_EN
+        ences (_        _^_EN
+        encies (_        _^_EN
+        end (_        _^_EN
+        ends (_        _^_EN
+        ending (_        _^_EN
+        ended (_        _^_EN
+        endum (_        _^_EN
+        ess (_        _^_EN
+        esses (_        _^_EN
+        essed (_        _^_EN
+        essful (_        _^_EN
+        essy (_        _^_EN
+//        et (_        _^_EN
+        ette (_        _^_EN
+.group f
+        f        f
+        fes (@   f'Es
+     _) fes (@   f'Es
+        ff       f
+// english:
+        fication (_        _^_EN
+        fications (_        _^_EN
+        fic (_        _^_EN
+        fics (_        _^_EN
+        fying (_        _^_EN
+        fied (_        _^_EN
+.group g
+        g        g
+        ge       g@
+.group h
+        h        h
+.group i
+        i        i
+        ie       i
+     i) i        _|i
+    A_) i        _|i
+// english:
+        ic (_        _^_EN
+        ics (_        _^_EN
+        iced (_        _^_EN
+        ices (_        _^_EN
+        icies (_        _^_EN
+        ique (_        _^_EN
+        iques (_        _^_EN
+        ical (_        _^_EN
+        icle (_        _^_EN
+        icles (_        _^_EN
+//        id (_        _^_EN
+        ide (_        _^_EN
+        ides (_        _^_EN
+        ided (_        _^_EN
+        iding (_        _^_EN
+        ive (_        _^_EN
+        ives (_        _^_EN
+        ile (_        _^_EN
+//        ie (_        _^_EN
+        ite (_        _^_EN
+        ites (_        _^_EN
+        ited (_        _^_EN
+//        in (_        _^_EN
+        ine (_        _^_EN
+        ines (_        _^_EN
+        ined (_        _^_EN
+        ization (_        _^_EN
+        izations (_        _^_EN
+        ism (_        _^_EN
+        isms (_        _^_EN
+        ist (_        _^_EN
+        ists (_        _^_EN
+        isted (_        _^_EN
+        isting (_        _^_EN
+        ity (_        _^_EN
+        ities (_        _^_EN
+        itied (_        _^_EN
+        ise (_        _^_EN
+        ises (_        _^_EN
+        ised (_        _^_EN
+        
+.group j
+        j        dZ
+.group k
+        k        k
+        k (_     k
+        kh       x
+        ke       k@
+     _) kee      k@;'E
+        kre      k'RE
+     _) ke (@P2  k@
+//     _) ke (@@   k@
+        ke (n    k@
+.group l
+        l        l
+        leh (_   l'Eh
+        ll       l
+// english:
+        logy (_        _^_EN
+        logue (_        _^_EN
+        lysis (_        _^_EN
+.group m
+        m        m
+     _) me (@@   m@
+     _) men (@P3 m@n
+     _) meng (@P4 m@N
+     _) mengem (@ m@N@m
+     _) mengenakkan m@N;'Enakkan
+     _) menger (@ m@N@R
+     _) mengel (a m@NEl
+     _) mengel (o m@N@l
+     _) mengel (ok m@N;|El
+     _) mengel (u m@N;|@l
+     _) mempe (@    m@mp@
+.group n
+        n        n
+        ng       N
+        ny       n^
+.group o
+        o        o
+     o) o        _|o
+    A_) o        _|o
+        o (r     O
+        oe       u        // Dutch spelling
+// english:
+        ose (_        _^_EN
+//        or (_        _^_EN
+        old (_        _^_EN
+        ous (_        _^_EN
+        ote (_        _^_EN
+        ource (_        _^_EN
+        ources (_        _^_EN
+        ourced (_        _^_EN
+        ourcing (_        _^_EN
+.group p
+        p        p
+        pp       p
+        ph       f
+        pe       p@
+     _) peme     p@m@
+     _) pe (@@   p@
+// english:
+        py (_        _^_EN
+.group q
+        q        k
+        qu       kw
+.group r
+        r        R2
+        r (K     R
+     e) r (K     R
+        rd (_        _^_EN
+.group s
+        s        s
+        ss       s
+        sy       C   // perhaps [S;] ??
+        sj       C
+     _) se (P2   s@
+     _) se (CP2  s@
+     _) se (@@   s@
+        se (pak  sE
+// english:
+//        sis (_        _^_EN
+        st (_        _^_EN
+        sm (_        _^_EN
+        sh (_        _^_EN
+.group t
+        t        t
+        tel (a   t@l
+     _) te       t@
+     _) ter (CP3 t@R
+     _) ter (ong tER
+     _) ter (or  tER
+     _) ter (oris tER
+        tj       tS      // Dutch
+     _) tel      t@l
+     _) ter (@@  t@R
+// english:
+        tion (_        _^_EN
+        ty (_        _^_EN
+        tre (_        _^_EN
+.group u
+        u        u
+     u) u        _|u
+    A_) u        _|u
+// english:
+        ure (_        _^_EN
+.group v
+        v        v
+.group w
+        w        w
+.group x
+        x        ks
+     _) x        z
+.group y
+        y        j
+// english:
+//        y (_        _^_EN
+.group z
+        z        z
+.group
+        $        dOlaR
+    __) - (_D    t,andak'uR2aN
+        *        b'intaN
+     *) * (*
+        ** 
+    **) * (_         _::
+    _) .com     d0tk0m
+
