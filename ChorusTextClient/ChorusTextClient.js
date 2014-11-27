@@ -25,7 +25,8 @@
 // ==================================================
 var serialPort = require("serialport");
 var cFocus = 2;
-var cs = require( './ChorusSpeech.js' );
+var ChorusSpeech = require( './ChorusSpeech.js' );
+var cs = new ChorusSpeech();
 var cd = require( './ChorusDocument.js' );
 var SerialPort = serialPort.SerialPort; // localize object constructor
 
@@ -184,6 +185,12 @@ var arduino = { comName : "", pnpId : "usb-Arduino" };
 var detectArduino = function( callback ) {
     // list serial ports available
     serialPort.list(function (err, ports) {
+      if( err ){
+          var msg = "Error opening Serial port: " + err.msg + " Terminating.";
+          console.log( msg );
+          cs.say( msg );
+          process.exit();
+      }
       ports.forEach(function(port) {
         console.log(port.comName);
         console.log(port.pnpId);
@@ -196,12 +203,16 @@ var detectArduino = function( callback ) {
       });
       // if arduino NOT found
       if( arduino.comName == "" ) {
-        console.log( "Error: Can't Find Arduino On USB - Is It Plugged In?" );
-        cs.say( "Can not find Arduino, is it plugged in to USB? Terminating now" );
+        var msg = "Error. Can not find Arduino, is it plugged in to USB? Terminating now";
+        console.log( msg );
+        cs.say( msg );
         process.exit()
+      } else {
+          setTimeout( function() {
+              callback( arduino.comName );
+          }, 12000 );
       }
-      callback( arduino.comName );
-    });
+  });
 };
 
 var connectArduino = function( daPath ) {
@@ -219,6 +230,7 @@ var connectArduino = function( daPath ) {
         } else {
             console.log( "SUCCESS - Serial Port Opened Successfully!" );
             cs.sys_say( "client_ready" );
+
             sp.on("data", function (data) {
                 console.log("here: "+data);
                 if( data.indexOf( "{" ) == 0 ) {
@@ -362,9 +374,33 @@ var connectArduino = function( daPath ) {
 };
 
 
+var announceIPAddress = function( callback ) {
+    cs.findIPAddress( function( err ) {
+        if( err ) {
+            cs.say( "ERROR! Can't find IP Address, terminating!" );
+            process.exit();
+        } else {
+            callback;
+        }
+    } );
+};
 
 
-detectArduino( connectArduino );
+
+
+cs.on( 'ipFound', function( data ) {  
+    console.log( "IP address is: " + data );
+    cs.sayIPAddress();
+} );
+
+
+
+
+cs.say( "ChorusText Starting..." );
+setTimeout( function() {
+    announceIPAddress( detectArduino( connectArduino ) );
+}, 3000 );
+
 
 
 
