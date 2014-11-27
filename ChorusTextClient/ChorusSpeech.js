@@ -81,7 +81,7 @@ function ChorusSpeech() {
     self.cycleLang = function( dir ) {
         if( dir == "u" || dir == "c") {
             langIndex ++;
-            if( langIndex > 2 ) langIndex = 0;
+            if( langIndex > 1 ) langIndex = 0;
         } else if( dir == "d" ) {
             langIndex --;
             if( langIndex < 0 ) langIndex = 2;
@@ -264,9 +264,9 @@ function ChorusSpeech() {
                 }
             break;
             case "language_set" : 
-                sys_msg_full = "English.";
+                sys_msg_full = "Language is set to: English.";
                 if( language == "id" ) {
-                    sys_msg_full = "Bahasa Indonesia.";
+                    sys_msg_full = "Sekarang menggunakan Bahasa Indonesia.";
                 } else if( language == "zh" ) {
                     sys_msg_full = "语言设置为：中文";
                 }
