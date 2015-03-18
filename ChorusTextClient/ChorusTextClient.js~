@@ -27,7 +27,8 @@ var serialPort = require("serialport");
 var cFocus = 2;
 var ChorusSpeech = require( './ChorusSpeech.js' );
 var cs = new ChorusSpeech();
-var cd = require( './ChorusDocument.js' );
+var CD = require( './ChorusDocument.js' );
+var cd = new CD();
 var SerialPort = serialPort.SerialPort; // localize object constructor
 
 
@@ -239,7 +240,7 @@ var connectArduino = function( daPath ) {
                         obj = JSON.parse( data );
                     } catch( e ) {
                         console.log( "ERROR - Invalid JSON received from Arduino!" );
-                                                cs.say( "Error" ); // should use cs.sys_say here
+                        cs.say( "Error" ); // should use cs.sys_say here
                     }
                     if( obj.hasOwnProperty( 'q' ) ) { // query
                         var theCursor = cd.getCursor();
@@ -374,7 +375,8 @@ var connectArduino = function( daPath ) {
                         cs.sys_say( "speechrateChar_adjusted" );
                     }
                 }
-            } );
+                //sp.flush();
+            } );  // end sp.on( 'data' )
         }
     });
 };
@@ -428,6 +430,11 @@ process.stdin.on('keypress', function (c, key) {
       // do nothing
       //process.stdin.pause()
   } else {
+      cd.changedByChar( key, function( data ){
+          data.dor = "lalalalalalallaalalalalalalalallalalalalalalala";
+          console.log( data );
+      } ); // experimental
+      /*
       if( key.name == "backspace" ){
           cd.deleteChar( function( data ) {
               if( data ) { 
@@ -476,11 +483,12 @@ process.stdin.on('keypress', function (c, key) {
                       var iseng = cd.getCursor();
                       console.log( iseng );
                       sp.write( msg ); 
-                      arduinoSliderPromise = null;
                   }, 1000 );
+                      arduinoSliderPromise = null;
               }
           } );
       }
+      */
       //setTimeout( function() { 
       //    process.stdin.resume();
       //}, 1000 );
@@ -491,6 +499,33 @@ process.stdin.on('keypress', function (c, key) {
 
 process.stdin.resume()
 
+
+
+var toArd = "";
+
+// listener for new target positions for the sliders to move to
+cd.on( 'cdUpdated', function( data ) {  
+    var ulObj = data;
+    console.log( ">>>>>>>>>> emitting updateLines" );
+    io.to( "read" ).emit( 'updateLines', ulObj );
+
+    toArd = "MS-" + data.newCursor.line + "-" + data.newCursor.word + "-" + data.newCursor.char + "\n";
+    console.log( "pushing: " + toArd );
+} );
+
+// digest cycle for outgoing slider movement ("MS" for "MoveSliders") messages to Arduino, as a result of keystrokes (typing)
+// incoming messages from Arduino are processed directly, and doesn't go through digest
+var digest = function() {
+    if( toArd != "" ) {
+        console.log( ">>> going to Arduino >>> " + toArd );
+        sp.write( toArd );
+        toArd = "";
+    }
+};
+
+setInterval( function(){
+    digest();
+}, 2000 );
 
 
 
