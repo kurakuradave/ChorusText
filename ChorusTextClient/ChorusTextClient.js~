@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------\
 |                                                                              |
-|    ChorusText - Open Assistive Device For People With Low-vision / Blindness |
+|    ChorusTextClient - Client program for ChorusText Open Assistive Device    |
 |    Copyright (C) 2014  David Effendi                                         |
 |    email: kurakuradave@gmail.com                                             |
 |                                                                              |
@@ -25,7 +25,8 @@
 // ==================================================
 var serialPort = require("serialport");
 var cFocus = 2;
-var cs = require( './ChorusSpeech.js' );
+var ChorusSpeech = require( './ChorusSpeech.js' );
+var cs = new ChorusSpeech();
 var cd = require( './ChorusDocument.js' );
 var SerialPort = serialPort.SerialPort; // localize object constructor
 
@@ -179,175 +180,233 @@ cs.setLanguage( "english" );
 // set rate
 cs.setRate( "general", rate );
 
+var arduino = { comName : "", pnpId : "usb-Arduino" };
 
-
-// list serial ports available
-serialPort.list(function (err, ports) {
-  ports.forEach(function(port) {
-    console.log(port.comName);
-    console.log(port.pnpId);
-    console.log(port.manufacturer);
+var detectArduino = function( callback ) {
+    // list serial ports available
+    serialPort.list(function (err, ports) {
+      if( err ){
+          var msg = "Error opening Serial port: " + err.msg + " Terminating.";
+          console.log( msg );
+          cs.say( msg );
+          process.exit();
+      }
+      ports.forEach(function(port) {
+        console.log(port.comName);
+        console.log(port.pnpId);
+        console.log(port.manufacturer);
+        // find arduino on usb serial
+        if( port.pnpId.indexOf( arduino.pnpId ) != -1 ) { 
+            arduino.comName = port.comName;
+            console.log( arduino  );
+        }
+      });
+      // if arduino NOT found
+      if( arduino.comName == "" ) {
+        var msg = "Error. Can not find Arduino, is it plugged in to USB? Terminating now";
+        console.log( msg );
+        cs.say( msg );
+        process.exit()
+      } else {
+          setTimeout( function() {
+              callback( arduino.comName );
+          }, 12000 );
+      }
   });
-});
+};
 
+var connectArduino = function( daPath ) {
+    console.log( "connecting to Arduino" );
+    console.log( daPath );
+    // init serial port at daPath
+    sp = new SerialPort(daPath, {
+      parser: serialPort.parsers.readline("\n"), 
+      baudrate : 9600
+    }, false);
+    
+    sp.open( function( error ) {
+        if( error ) {
+            console.log( "ERROR - Can't Opent Serial Port!" );
+        } else {
+            console.log( "SUCCESS - Serial Port Opened Successfully!" );
+            cs.sys_say( "client_ready" );
 
-
-
-// init serial port at /dev/ttyACM0
-sp = new SerialPort("/dev/ttyACM0", {
-  parser: serialPort.parsers.readline("\n"), 
-  baudrate : 9600
-}, false);
-
-
-
-sp.open( function( error ) {
-    if( error ) {
-        console.log( "ERROR - Can't Opent Serial Port!" );
-    } else {
-        console.log( "SUCCESS - Serial Port Opened Successfully!" );
-        cs.sys_say( "client_ready" );
-        sp.on("data", function (data) {
-            console.log("here: "+data);
-            if( data.indexOf( "{" ) == 0 ) {
-               var obj = JSON.parse( data );
-                if( obj.hasOwnProperty( 'q' ) ) { // query
-                    var theCursor = cd.getCursor();
-                    switch( obj.q ) {
-                        case "l" : // line
-                            var target = 10;
-                            var cLine = theCursor.line;
-                            if( cLine < 10 ) {
-                                target = cLine;
-                                sp.write( target + "\n" );
-
-                            }
-                        break;
-                        case "w" : // word
-                            var target = 10;
-                            var cWord = theCursor.word;
-                            if( cWord < 10 ) {
-                                target = cWord;
-                                sp.write( target + "\n" );
-                            }
-                        break;
-                        case "c" : // char
-                            var target = 10;
-                            var cChar = theCursor.char;
-                            if( cChar < 10 ) {
-                                target = cChar;
-                                sp.write( target + "\n" );
-                            }
-                        break;
+            sp.on("data", function (data) {
+                console.log("here: "+data);
+                if( data.indexOf( "{" ) == 0 ) {
+                    var obj = {};
+                    try{
+                        obj = JSON.parse( data );
+                    } catch( e ) {
+                        console.log( "ERROR - Invalid JSON received from Arduino!" );
+                                                cs.say( "Error" ); // should use cs.sys_say here
                     }
-                }
-                if( obj.hasOwnProperty( 't' ) ) { // turn
-                    console.log( obj );
-                    cFocus = parseInt(obj.t.d); // obj.turn.dial
-                    console.log( cFocus );
-                    switch( cFocus ) {
-                        case 0 :
-                            cs.sys_say( "settings" );
-                        break;
-                        case 1 :
-                            cs.sys_say( "location" );
-                        break;
-                        case 2 :
-                            cs.sys_say( "main" );
-                        break;
-                        case 3 :
-                            cs.sys_say( "chat" );
-                        break;
-                        case 4 :
-                            cs.sys_say( "find" );
-                        break;
+                    if( obj.hasOwnProperty( 'q' ) ) { // query
+                        var theCursor = cd.getCursor();
+                        switch( obj.q ) {
+                            case "l" : // line
+                                var target = 10;
+                                var cLine = theCursor.line;
+                                if( cLine < 10 ) {
+                                    target = cLine;
+                                    sp.write( target + "\n" );
+
+                                }
+                            break;
+                            case "w" : // word
+                                var target = 10;
+                                var cWord = theCursor.word;
+                                if( cWord < 10 ) {
+                                    target = cWord;
+                                    sp.write( target + "\n" );
+                                }
+                            break;
+                            case "c" : // char
+                                var target = 10;
+                                var cChar = theCursor.char;
+                                if( cChar < 10 ) {
+                                    target = cChar;
+                                    sp.write( target + "\n" );
+                                }
+                            break;
+                        }
                     }
-                }
-                if( obj.hasOwnProperty( 'l' ) ) {
-                    cs.cycleLang( obj.l );
-                    var lObj = { "lang" : cs.getLanguage()  };
-                    io.to( "settings" ).emit( 'langAdjusted', lObj );
-                }
+                    if( obj.hasOwnProperty( 't' ) ) { // turn
+                        console.log( obj );
+                        cFocus = parseInt(obj.t.d); // obj.turn.dial
+                        console.log( cFocus );
+                        switch( cFocus ) {
+                            case 0 :
+                                cs.sys_say( "settings" );
+                            break;
+                            case 1 :
+                                cs.sys_say( "location" );
+                            break;
+                            case 2 :
+                                cs.sys_say( "main" );
+                            break;
+                            case 3 :
+                                cs.sys_say( "chat" );
+                            break;
+                            case 4 :
+                                cs.sys_say( "find" );
+                            break;
+                        }
+                    }
+                    if( obj.hasOwnProperty( 'l' ) ) {
+                        cs.cycleLang( obj.l );
+                        var lObj = { "lang" : cs.getLanguage()  };
+                        io.to( "settings" ).emit( 'langAdjusted', lObj );
+                    }
                 
-                if( obj.hasOwnProperty( 'm' ) ) { // menu
-                    // TEMPORARILY, this cycles through available languages
-                    cs.cycleLang( obj.m );
-                    var lObj = { "lang" : cs.getLanguage()  };
-                    io.to( "settings" ).emit( 'langAdjusted', lObj );
-                }
-                if( obj.hasOwnProperty( 'j' ) ){ // jump
-                    if( cFocus == 2 ) {
-                        cd.updateCursorBase( obj.j );
+                    if( obj.hasOwnProperty( 'm' ) ) { // menu
+                        // TEMPORARILY, this cycles through available languages
+                        cs.cycleLang( obj.m );
+                        var lObj = { "lang" : cs.getLanguage()  };
+                        io.to( "settings" ).emit( 'langAdjusted', lObj );
                     }
-                }
-                if( obj.hasOwnProperty( 'r' ) ){ // read
-                    if( cFocus == 2 ) {
-                        cd.updateCursor( obj.r, function( doRead ) {
-                            if( doRead ) { 
-                            console.log( ">>>>>>>>>> emitting cursorUpdate" );
-                                var theCursor = cd.getCursor();
-                                console.log( theCursor );
-                                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
-                                var theCursorBases = cd.getCursorBases();
-                                var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
-                                console.log( msg );
-                                //sp.write( msg );
-                                var tfs = cd.getTextForSpeech( obj.r );
-                                if( tfs != "" ) {
-                                    if( obj.r.hasOwnProperty( 'c' ) ) // char
-                                        cs.say( tfs, "punctuation" );
-                                    else
-                                        cs.say( tfs );
+                    if( obj.hasOwnProperty( 'j' ) ){ // jump
+                        if( cFocus == 2 ) {
+                            cd.updateCursorBase( obj.j );
+                        }
+                    }
+                    if( obj.hasOwnProperty( 'r' ) ){ // read
+                        if( cFocus == 2 ) {
+                            cd.updateCursor( obj.r, function( doRead ) {
+                                if( doRead ) { 
+                                console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                    var theCursor = cd.getCursor();
+                                    console.log( theCursor );
+                                    io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
+                                    var theCursorBases = cd.getCursorBases();
+                                    var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
+                                    console.log( msg );
+                                    //sp.write( msg );
+                                    var tfs = cd.getTextForSpeech( obj.r );
+                                    if( tfs != "" ) {
+                                        if( obj.r.hasOwnProperty( 'c' ) ) // char
+                                            cs.say( tfs, "punctuation" );
+                                        else
+                                            cs.say( tfs );
+                                    }
+                                } else {
+                                    cs.sys_say( "no_more_text" );
                                 }
-                            } else {
-                                cs.sys_say( "no_more_text" );
-                            }
-                        } );
+                            } );
+                        }
                     }
-                }
-                if( obj.hasOwnProperty( 'v' ) ){ // verify current line/word/char
-                    if( cFocus == 2 ) {
-                        cd.updateCursor( obj.v, function( doRead ) {
-                            if( doRead ) { 
-                            console.log( ">>>>>>>>>> emitting cursorUpdate" );
-                                var theCursor = cd.getCursor();
-                                console.log( theCursor );
-                                io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
-                                var theCursorBases = cd.getCursorBases();
-                                var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
-                                console.log( msg );
-                                sp.write( msg ); // this is the only line that differs from a "read" see above
-                                var tfs = cd.getTextForSpeech( obj.v );
-                                if( tfs != "" ) {
-                                    if( obj.v.hasOwnProperty( 'c' ) ) // char
-                                        cs.say( tfs, "punctuation" );
-                                    else
-                                        cs.say( tfs );
+                    if( obj.hasOwnProperty( 'v' ) ){ // verify current line/word/char
+                        if( cFocus == 2 ) {
+                            cd.updateCursor( obj.v, function( doRead ) {
+                                if( doRead ) { 
+                                console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                    var theCursor = cd.getCursor();
+                                    console.log( theCursor );
+                                    io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
+                                    var theCursorBases = cd.getCursorBases();
+                                    var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
+                                    console.log( msg );
+                                    sp.write( msg ); // this is the only line that differs from a "read" see above
+                                    var tfs = cd.getTextForSpeech( obj.v );
+                                    if( tfs != "" ) {
+                                        if( obj.v.hasOwnProperty( 'c' ) ) // char
+                                            cs.say( tfs, "punctuation" );
+                                        else
+                                            cs.say( tfs );
+                                    }
+                                } else {
+                                    cs.sys_say( "no_more_text" );
                                 }
-                            } else {
-                                cs.sys_say( "no_more_text" );
-                            }
-                        } );
+                            } );
+                        }
+                    }
+                    if( obj.hasOwnProperty( 'sg' ) ){
+                        cs.setRate( "general", obj.sg );
+                        var rObj = { "rate" : cs.getRate( "general" ) };
+                        io.to( "settings" ).emit( 'rateAdjusted', rObj );
+                        cs.sys_say( "speechrate_adjusted" );
+                    }
+                    if( obj.hasOwnProperty( 'sc' ) ){
+                        cs.setRate( "char", obj.sc );
+                        // web-interface - NOT YET
+                        //var rObj = { "rate" : cs.getRate( "char" ) };
+                        //io.to( "settings" ).emit( 'rateAdjusted', rObj );
+                        cs.sys_say( "speechrateChar_adjusted" );
                     }
                 }
-                if( obj.hasOwnProperty( 'sg' ) ){
-                    cs.setRate( "general", obj.sg );
-                    var rObj = { "rate" : cs.getRate( "general" ) };
-                    io.to( "settings" ).emit( 'rateAdjusted', rObj );
-                    cs.sys_say( "speechrate_adjusted" );
-                }
-                if( obj.hasOwnProperty( 'sc' ) ){
-                    cs.setRate( "char", obj.sc );
-                    // web-interface - NOT YET
-                    //var rObj = { "rate" : cs.getRate( "char" ) };
-                    //io.to( "settings" ).emit( 'rateAdjusted', rObj );
-                    cs.sys_say( "speechrateChar_adjusted" );
-                }
-            }
-        } );
-    }
+            } );
+        }
+    });
+};
 
-});
+
+var announceIPAddress = function( callback ) {
+    cs.findIPAddress( function( err ) {
+        if( err ) {
+            cs.say( "ERROR! Can't find IP Address, terminating!" );
+            process.exit();
+        } else {
+            callback;
+        }
+    } );
+};
+
+
+
+
+cs.on( 'ipFound', function( data ) {  
+    console.log( "IP address is: " + data );
+    cs.sayIPAddress();
+} );
+
+
+
+
+cs.say( "ChorusText Starting..." );
+setTimeout( function() {
+    announceIPAddress( detectArduino( connectArduino ) );
+}, 3000 );
+
 
 
 

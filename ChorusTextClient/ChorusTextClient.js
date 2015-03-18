@@ -234,7 +234,13 @@ var connectArduino = function( daPath ) {
             sp.on("data", function (data) {
                 console.log("here: "+data);
                 if( data.indexOf( "{" ) == 0 ) {
-                   var obj = JSON.parse( data );
+                    var obj = {};
+                    try{
+                        obj = JSON.parse( data );
+                    } catch( e ) {
+                        console.log( "ERROR - Invalid JSON received from Arduino!" );
+                        cs.say( "Error" ); // should use cs.sys_say here
+                    }
                     if( obj.hasOwnProperty( 'q' ) ) { // query
                         var theCursor = cd.getCursor();
                         switch( obj.q ) {

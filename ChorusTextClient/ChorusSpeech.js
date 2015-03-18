@@ -81,7 +81,7 @@ function ChorusSpeech() {
     self.cycleLang = function( dir ) {
         if( dir == "u" || dir == "c") {
             langIndex ++;
-            if( langIndex > 1 ) langIndex = 0;
+            if( langIndex > 2 ) langIndex = 0;
         } else if( dir == "d" ) {
             langIndex --;
             if( langIndex < 0 ) langIndex = 2;
