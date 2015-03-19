@@ -431,7 +431,7 @@ process.stdin.on('keypress', function (c, key) {
       //process.stdin.pause()
   } else {
       cd.changedByChar( key, function( data ){
-          data.dor = "lalalalalalallaalalalalalalalallalalalalalalala";
+          //data.dor = "lalalalalalallaalalalalalalalallalalalalalalala";
           console.log( data );
       } ); // experimental
       /*
@@ -525,7 +525,7 @@ var digest = function() {
 
 setInterval( function(){
     digest();
-}, 2000 );
+}, 1000 );
 
 
 

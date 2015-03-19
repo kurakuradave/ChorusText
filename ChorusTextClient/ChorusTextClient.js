@@ -431,9 +431,8 @@ process.stdin.on('keypress', function (c, key) {
       //process.stdin.pause()
   } else {
       cd.changedByChar( key, function( data ){
-          data.dor = "lalalalalalallaalalalalalalalallalalalalalalala";
           console.log( data );
-      } ); // experimental
+      } );
       /*
       if( key.name == "backspace" ){
           cd.deleteChar( function( data ) {

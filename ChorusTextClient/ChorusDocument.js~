@@ -527,7 +527,7 @@ self.deleteChar = function( callback ) {
     var changedLines = [];
     changedLines.push( theLine );
     //console.log( "preparing data..." );
-    var data = { 'changedLines': changedLines,'cursor': self.getCursor() };
+    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), newCursor : self.getCursorArduino() };
     //console.log( "calling callback..." );
     callback( data );
 }
@@ -535,64 +535,48 @@ self.deleteChar = function( callback ) {
 
 
 
-// deprecated
 self.insertChar = function( aKey, callback ) {
-    var theCursor = self.getCursor();
-    //console.log( theCursor );
-    var theLine = lines[ theCursor.line ];
-    //console.log( theLine );
-    var theWord = theLine.words[ theCursor.word ];
-    //console.log( theWord );
-    var theChar = theLine.words[ theCursor.word ].chars[ theCursor.char ];
-    //console.log( theChar );
-    if( theCursor.char >= 9 ) {
-        theCursor.char = theCursor.char % 9;
+    var oldCursor = self.getCursor();
+    var oldLine = lines[ oldCursor.line ];
+    var oldWord = oldLine.words[ oldCursor.word ];
+    var oldChar = oldLine.words[ oldCursor.word ].chars[ oldCursor.char ];
+    //the line below ensures rightmost bracket is always not used. 
+    //If any char is inserted here, it will placed at index 0, the leftmost one, 
+    //this is equivalent with pressing the pagedown button once, and then insert the char on leftmost place.
+    if( oldCursor.char >= 9 ) {
+        oldCursor.char = oldCursor.char % 9; // 
     }
-    //console.log( "ctCursor.getBaseChar()" + ctCursor.getBaseChar() );
-    var theCharIndex = ctCursor.getBaseChar() + theCursor.char;
-    //console.log( "inserting char at theCharIndex " + theCharIndex );
+    var oldCharIndex = ctCursor.getBaseChar() + oldCursor.char;
     
     // determine the new char object
-    var newChar = { 'index': theCharIndex + 1, 'text' : aKey.sequence };
+    var newChar = { 'index': oldCharIndex, 'text' : aKey.sequence }; // new char will be placed at the location of oldChar, and push old chars rightwards
     console.log( "           newChar is: " );
     console.log( newChar );
     // insert the new char
-    //console.log( "splicing theWord.chars" );
-    theWord.chars.splice( (theCharIndex + 1 ), 0, newChar );
+    oldWord.chars.splice( (oldCharIndex ), 0, newChar );
    
-    //console.log( "rebuilding theWord..." );
-    theWord.rebuild();
+    oldWord.rebuild();
 
-    //console.log( "rebuilding theLine..." );
-    theLine.rebuild();
+    oldLine.rebuild();
 
-    //console.log( "rebuilding visualText..." );
     self.buildVisualText();
 
-    // update cursor
-    //console.log( "incrementing ctCursor.char... theCursor.char,newCharVal" );
-    //console.log( theCursor.char );
-    var newCharVal = ( ctCursor.getBaseChar() + theCursor.char ) + 1;
-    //console.log( newCharVal );
-    //console.log( "setting ctCursor.BaseChar to " + " floor of newCharVal / 9 " + ( newCharVal / 9 ) + Math.floor( newCharVal / 9 ) * 9  );
-    ctCursor.setBaseChar( Math.floor( newCharVal / 9 ) * 9 );
+    // update cursor, increment position by 1 coz of insertion of a new char
+    var nextCharIndex = oldCharIndex + 1; // increment the position of cursor after insertion of 1 char
+    ctCursor.setBaseChar( Math.floor( nextCharIndex / 9 ) * 9 );
 
-    if( newCharVal >= 9 ) { // increment base offset
-        newCharVal = newCharVal % 9;
+    if( nextCharIndex >= 9 ) { // keep last slider position clear
+        nextCharIndex = nextCharIndex % 9;
     }
-    //console.log( "setting ctCursor.char to newCharVal, which is " + newCharVal );
-    ctCursor.setChar( newCharVal );
+    ctCursor.setChar( nextCharIndex );
     console.log( "ctCursor.getChar is " + ctCursor.getChar() );
-    console.log( "now ctCursor.char is ctCursor.base-ctCursor.char-theCharindex++" + ctCursor.getBaseChar() + " " + ctCursor.getChar() + " " + ( theCharIndex + 1 ) );
+    console.log( "doubted???now ctCursor.char is ctCursor.base-ctCursor.char-theCharindex++" + ctCursor.getBaseChar() + " " + ctCursor.getChar() + " " + ( oldCharIndex + 1 ) );
 
     // do callback for socket
-    //console.log( "incrementing theCursor.char" );
-    theCursor.char += 1;
+    //theCursor.char += 1; // not needed right?
     var changedLines = [];
-    changedLines.push( theLine );
-    //console.log( "preparing data..." );
+    changedLines.push( oldLine );
     var data = { 'changedLines': changedLines,'cursor': self.getCursor(), 'newCursor' : self.getCursorArduino() };
-    //console.log( "calling callback..." );
     callback( data );
 }
 
