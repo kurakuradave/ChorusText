@@ -490,45 +490,52 @@ self.getCursorBases = function() {
 
 
 
-// deprecated
 self.deleteChar = function( callback ) {
-    var theCursor = self.getCursor();
-    //console.log( theCursor );
-    var theLine = lines[ theCursor.line ];
-    //console.log( theLine );
-    var theWord = theLine.words[ theCursor.word ];
-    //console.log( theWord );
-    var theChar = theLine.words[ theCursor.word ].chars[ theCursor.char ];
-    //console.log( theChar );
-    if( theCursor.char >= 9 ) {
-        theCursor.char = theCursor.char % 9;
+    // the char to the left of oldchar will be deleted (the previous char)
+    // all characters from the position of oldchar to the right (oldchar included) will be moved leftwards
+    var oldCursor = self.getCursor();
+    var oldLine = lines[ oldCursor.line ];
+    var oldWord = oldLine.words[ oldCursor.word ];
+    var oldChar = oldLine.words[ oldCursor.word ].chars[ oldCursor.char ];
+
+    // should try change this to =0?
+    if( oldCursor.char >= 9 ) {
+        oldCursor.char = oldCursor.char % 9;
+        console.log( "oldCursor.char " + oldCursor.char );
     }
-    //console.log( "ctCursor.getBaseChar()" + ctCursor.getBaseChar() );
-    var theCharIndex = ctCursor.getBaseChar() + theCursor.char;
-    //console.log( "deleting char at theCharIndex " + theCharIndex );
 
-    // delete the new char
-    //console.log( "splicing theWord.chars" );
-    theWord.chars.splice( (theCharIndex + 1 - 1 ), 1  );
+    var oldCharIndex = ctCursor.getBaseChar() + oldCursor.char;
+    console.log( "oldCharIndex " + oldCharIndex );
+    // delete the char to the left of oldChar
+    oldWord.chars.splice( (oldCharIndex - 1 ), 1  );
    
-    //console.log( "rebuilding theWord..." );
-    theWord.rebuild();
+    oldWord.rebuild();
 
-    //console.log( "rebuilding theLine..." );
-    theLine.rebuild();
+    oldLine.rebuild();
 
-    //console.log( "rebuilding visualText..." );
     self.buildVisualText();
 
-    ctCursor.setChar( ctCursor.getChar() - 1 );
-    ctCursor.setBaseChar( Math.floor( ctCursor.getChar() / 9 ) * 9 );
+    // update cursor, decrement position by 1 coz of deletion of 1 char
+    var nextCharIndex = oldCharIndex - 1;
+    console.log( ctCursor.getChar() );
 
+    ctCursor.setBaseChar( Math.floor( nextCharIndex / 9 ) * 9 );
+
+    // shoudl this be =0?
+    if( nextCharIndex >= 9 ) { // keep last slider position clear
+        nextCharIndex = nextCharIndex % 9;
+    }
+    ctCursor.setChar( nextCharIndex );
+    console.log( "nextCharIndex " + nextCharIndex );
+    
+
+        
+    console.log( "ctCursor.getChar " + ctCursor.getChar() );
     // preparing callback for socket    
     var changedLines = [];
-    changedLines.push( theLine );
-    //console.log( "preparing data..." );
+    changedLines.push( oldLine );
     var data = { 'changedLines': changedLines,'cursor': self.getCursor(), newCursor : self.getCursorArduino() };
-    //console.log( "calling callback..." );
+    console.log( data );
     callback( data );
 }
 
@@ -536,6 +543,8 @@ self.deleteChar = function( callback ) {
 
 
 self.insertChar = function( aKey, callback ) {
+    // new character will be placed at the location of old character in the text,
+    // old characters will be pushed rightwards
     var oldCursor = self.getCursor();
     var oldLine = lines[ oldCursor.line ];
     var oldWord = oldLine.words[ oldCursor.word ];
