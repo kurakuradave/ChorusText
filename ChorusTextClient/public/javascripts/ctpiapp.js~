@@ -112,9 +112,12 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                     $scope.newLine.words[ focusedWord ].text = newCharWordText;
                 }
                 newCharWordLineText = "<span class='focusl'><strong>";
+                var temp = "";
                 for( var j = 0; j < $scope.newLine.words.length; j++ ) {
-                    newCharWordLineText += $scope.newLine.words[ j ].text + " ";
+                    temp += $scope.newLine.words[ j ].text; 
                 }
+                temp += "&nbsp"; // add a space for accurate display oh HTML
+                newCharWordLineText += temp;
                 if( newCharWordLineText.indexOf( "\n" ) != -1 )
                     newCharWordLineText.substring( newCharWordLineText.length - 2 );
                 newCharWordLineText += "</strong></span>";
@@ -137,6 +140,8 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
 
         socket.on( 'initForRead', function( ifrObj ) {  
+            console.log( "<<<<<<<<<<<<<<< InitForRead received" );
+            console.log( ifrObj );
             $scope.$apply( function() {
                 $scope.lines = ifrObj.lines;
                 $scope.cursor = ifrObj.cursor;
@@ -161,7 +166,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                     tail.push( $scope.lines[ i ] );
                 }
 
-                var newLines = head + ulObj.changedLines + tail;
+                var newLines = head.concat( ulObj.changedLines ).concat( tail );
                 console.log( newLines );
                 $scope.lines = newLines;
                 $scope.cursor = ulObj.cursor;
