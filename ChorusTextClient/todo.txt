@@ -1,0 +1,11 @@
+To-Dos:
+Implement function addSpace() at end of each: word, line, document
+Refactor buildVisualText() to take into account  spaces (check first if this is needed)
+Implement addSpace() in parseCTDocu()
+
+implement merging of words as a result of hitting Backspace
+implement merging of lines as a result of hitting Backspace
+implement splitting of a word into two words as a result of hitting space
+implement insertion of new word as a result of hitting space while resting on a space
+implement splitting of a line into two lines as a result of hitting Enter
+implement insertion of new lines as a result of hitting Enter

@@ -138,6 +138,7 @@ self.loadCTDocu = function( someText ) {
     for( var i = 0; i < tempLines.length; i++ ) {
         var tline = tempLines[ i ];
         var aLineObj = self.buildLine( i, tline );
+        aLineObj.rebuild();
         lines[ i ] = aLineObj;
     }
 };
@@ -146,14 +147,31 @@ self.loadCTDocu = function( someText ) {
 
 
 self.buildLine = function( someIndex, someLine ) {
+    console.log( "in buildLine()" );
     var wordObjs = [];
     var tempWords = someLine.split( " " );
     for( var i = 0; i < tempWords.length; i++ ) {
         var tword = tempWords[ i ];
         var aWordObj = self.buildWord( i, tword );
+        aWordObj.rebuild();
         wordObjs[ i ] = aWordObj;
+        console.log( aWordObj );
     }
-
+    // this add spaceword at the end of the line
+    /*
+    wordObjs[ wordObjs.length ] = { 'index' : wordObjs.length, 
+             'text' : " ", 
+             'chars' : [{'index':0, 'text':" "}],
+             'rebuild' : function() {
+                 //console.log( "rebuilding characters..." );
+                 this.text = "";
+                 for( var i = 0; i < this.chars.length; i++ ) {
+                     this.chars[ i ].index = i;
+                     this.text += this.chars[ i ].text;
+                 }
+             }
+    };;// experimental
+    */
     return { 'index' : someIndex, 
              'text' : someLine, 
              'words' : wordObjs,
@@ -161,12 +179,13 @@ self.buildLine = function( someIndex, someLine ) {
                  this.text = "";
                  for( var i = 0; i < this.words.length; i++ ) {
                      this.words[ i ].index = i;
-                     this.text += this.words[ i ].text + " ";
+                     this.text += this.words[ i ].text; // not adding space here coz there's a space at end of each word already
+                     console.log( this.text );
                  }
-                 this.text.substring( 0, this.text.length - 1 );
-                 console.log( "line rebuilt!" );
-                 console.log( this );
-             }
+                 this.text.substring( 0, this.text.length );
+                 //console.log( "line rebuilt!" );
+                 //console.log( this );
+               }
     };
 };
 
@@ -181,7 +200,9 @@ self.buildWord = function( someIndex, someWord ) {
         var aCharObj = self.buildChar( i, tchar );
         charObjs[ i ] = aCharObj;
     }
-
+    // adds a space at the end of the word
+    charObjs[ charObjs.length ] = self.buildChar( charObjs.length, " " );
+    
     return { 'index' : someIndex, 
              'text' : someWord, 
              'chars' : charObjs,
@@ -214,6 +235,57 @@ self.buildVisualText = function() {
         visualText += lines[ i ].text + "\n";
     }
     visualText = visualText.substring( 0, visualText.length - 2 );
+};
+
+
+
+
+self.addSpaceWord = function( targetPos ) {
+// adds a word containing a space char at a specified position
+    var spaceChar = self.buildChar( 0, " " ); // creates a char object with text " ", and at index 0 of the word
+    var theWord = { 
+             'index' : targetPos.word, 
+             'text' : "", 
+             'chars' : [spaceChar],
+             'rebuild' : function() {
+                 //console.log( "rebuilding characters..." );
+                 this.text = "";
+                 for( var i = 0; i < this.chars.length; i++ ) {
+                     this.chars[ i ].index = i;
+                     this.text += this.chars[ i ].text;
+                     console.log( this.chars[ i ].text );
+                 }
+                 console.log( "word rebuild, text: " + this.text );
+             }
+    };
+    theWord.rebuild();
+    lines[ targetPos.line ].words.splice( targetPos.word, 0, theWord );
+    lines[ targetPos.line ].rebuild();
+    self.buildVisualText();
+};
+
+
+
+
+self.addSpaceLine = function( targetPos ) {
+// adds a line containing a word, containing a space char
+    var theLine = { 
+             'index' : targetPos.line, 
+             'text' : "", 
+             'words' : [],
+             'rebuild' : function() {
+                 this.text = "";
+                 for( var i = 0; i < this.words.length; i++ ) {
+                     this.words[ i ].index = i;
+                     this.text += this.words[ i ].text; // not adding space here coz there's a space at end of each word already
+                     console.log( this.text );
+                 }
+                 this.text.substring( 0, this.text.length );
+                 //console.log( "line rebuilt!" );
+                 //console.log( this );
+             }
+    };
+    theLine.words.push( self.addSpaceWord( targetPos ) );
 };
 
 
@@ -501,11 +573,9 @@ self.deleteChar = function( callback ) {
     // should try change this to =0?
     if( oldCursor.char >= 9 ) {
         oldCursor.char = oldCursor.char % 9;
-        console.log( "oldCursor.char " + oldCursor.char );
     }
 
     var oldCharIndex = ctCursor.getBaseChar() + oldCursor.char;
-    console.log( "oldCharIndex " + oldCharIndex );
     // delete the char to the left of oldChar
     oldWord.chars.splice( (oldCharIndex - 1 ), 1  );
    
@@ -543,12 +613,13 @@ self.deleteChar = function( callback ) {
 
 
 self.insertChar = function( aKey, callback ) {
+    
     // new character will be placed at the location of old character in the text,
     // old characters will be pushed rightwards
     var oldCursor = self.getCursor();
     var oldLine = lines[ oldCursor.line ];
     var oldWord = oldLine.words[ oldCursor.word ];
-    var oldChar = oldLine.words[ oldCursor.word ].chars[ oldCursor.char ];
+    var oldChar = oldWord.chars[ oldCursor.char ];
     //the line below ensures rightmost bracket is always not used. 
     //If any char is inserted here, it will placed at index 0, the leftmost one, 
     //this is equivalent with pressing the pagedown button once, and then insert the char on leftmost place.
@@ -559,8 +630,8 @@ self.insertChar = function( aKey, callback ) {
     
     // determine the new char object
     var newChar = { 'index': oldCharIndex, 'text' : aKey.sequence }; // new char will be placed at the location of oldChar, and push old chars rightwards
-    console.log( "           newChar is: " );
-    console.log( newChar );
+    //console.log( "           newChar is: " );
+    //console.log( newChar );
     // insert the new char
     oldWord.chars.splice( (oldCharIndex ), 0, newChar );
    
@@ -591,17 +662,247 @@ self.insertChar = function( aKey, callback ) {
 
 
 
+self.clone = function(obj) {
+            // Handle the 3 simple types, and null or undefined
+            if (null == obj || "object" != typeof obj) return obj;
+
+            // Handle Date
+            if (obj instanceof Date) {
+                var copy = new Date();
+                copy.setTime(obj.getTime());
+                return copy;
+            }
+
+            // Handle Array
+            if (obj instanceof Array) {
+                var copy = [];
+                for (var i = 0, len = obj.length; i < len; i++) {
+                    copy[i] = self.clone(obj[i]);
+                }
+                return copy;
+            }
+
+            // Handle Object
+            if (obj instanceof Object) {
+                var copy = {};
+                for (var attr in obj) {
+                    if (obj.hasOwnProperty(attr)) copy[attr] = self.clone(obj[attr]);
+                }
+                return copy;
+            }
+
+            throw new Error("Unable to copy obj! Its type isn't supported.");
+};
+
+
+
+
+
+self.getCharText = function( cursor ) {
+    return( lines[ cursor.line ].words[ cursor.word ].chars[ cursor.char ].text );
+};
+
+
+
+
+self.moveCursorToNewLine = function( oldCursor, newCursor ) {
+
+        if( newCursor.line >= 9 ) {
+            var baseLineOffset = Math.floor( newCursor.line / 9 ) * 9;
+            ctCursor.setBaseLine( baseLineOffset );
+            ctCursor.setLine( newCursor.line );
+            newCursor.line = newCursor.line % 9;
+        }
+
+        newCursor.word = 0;
+        newCursor.char = 0;
+        var changedLines = [ lines[oldCursor.line], lines[oldCursor.line + 1] ];
+        self.setCursorLine( newCursor.line,function(){
+            self.setCursorWord( newCursor.word, function() {  
+                self.setCursorChar( 0, function() {
+                    var data = { 'changedLines': changedLines,'cursor': newCursor, 'newCursor' : newCursor };
+                    self.emit( 'cdUpdated', data );
+                });
+            } );    
+        } );    
+};
+
+
+
+
+self.moveCursorToNewSpaceWord = function( oldCursor, newCursor ) {
+        // remap values of the cursor into base values + slider values
+        if( newCursor.word >= 9 ) {
+            var baseWordOffset = Math.floor( newCursor.word / 9 ) * 9;
+            ctCursor.setBaseWord( baseWordOffset );
+            ctCursor.setWord( newCursor.word );
+            newCursor.word = newCursor.word % 9;
+        }
+        newCursor.char = 0;
+        self.setCursorWord( newCursor.word, function() {  
+            self.setCursorChar( 0, function() {
+                var data = { 'changedLines': lines[ oldCursor.line ],'cursor': oldCursor, 'newCursor' : newCursor };
+                self.emit( 'cdUpdated', data );
+            } );
+        } );
+};
+
+
+
+
+self.determineLCEnter = function( aCursor ) {
+    var ret = 2;
+    if( self.getCharText( aCursor ) == " " &&
+        aCursor.words == lines[ aCursor.line ].words.length - 1 &&
+        aCursor.char == lines[ aCursor.line ].words[ aCursor.word ].chars.length - 1 ) {
+        ret = 1;
+    }
+    return ret;
+};
+
+
+
+
+self.determineLCSpace = function( aCursor ) {
+   var ret = 0;
+    if( self.getCharText( aCursor ) == " " ) 
+        ret = 1; // cursor is on a space char, at the end of a word, line or docu
+    else if( aCursor.char == 0 )
+        ret = 2; // cursor is at the beginning of a word
+    else
+        ret = 3; // cursor is within a wor
+    return ret;
+};
+
+
+
+
+self.splitToTwoLines = function( aCursor ) {
+    var theLine = lines[ aCursor.line ];
+    var tail = {};
+    var head = {};
+    var tailText = "";
+    var headText = "";
+    var headIndex = theLine.index;
+    var tailIndex = headIndex +1;
+    // populate headText and tailText, exclusive of the current word
+    for( var i = 0; i < aCursor.word; i++ ) {
+        headText += theLine.words[ i ].text;
+    }
+    for( var j = aCursor.word +1; j < theLine.words.length; j++ ) {
+        tailText += theLine.words[ j ].text;    
+    }
+    tailText = tailText.substring( 0, tailText.length - 1 ); // get rid of trailing space
+
+    // add characters from appropriate section of the current word to headText and tailText
+    var theWord = theLine.words[ aCursor.word ];
+    for( var i = 0; i < aCursor.char; i++ ) {
+        headText += theWord.chars[ i ].text;
+    }
+    var subTailText = " ";
+    for( var j = aCursor.char; j < theWord.chars.length; j++ ) {
+        subTailText += theWord.chars[ j ].text;
+    }
+    tailText = subTailText + tailText;
+    // add a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
+    if( headText[headText.length - 1] != " " )
+        headText += " ";
+    
+    if( tailText[ 0 ] == " " )
+        tailText = tailText.substring( 1, tailText.length );
+    if( tailText[ tailText.length - 1 ] == " " )
+        tailText = tailText.substring( 0, tailText.length-1 );
+
+    head = self.buildLine( headIndex, headText );
+    tail = self.buildLine( tailIndex, tailText );
+    return [head, tail];
+};
+
+
+
+
+self.reindexLines = function() {
+    for( var i = 0; i < lines.length; i ++ ) {
+        lines[ i ].index = i;
+    }
+};
+
+
+
 
 self.changedByChar = function( aKey, callback ) {
-    // change the document according to the key pressed
+    // change the document according to the key pressed and location of the cursor
     // calculate new position for the sliders
     // inform main app using emit
+    var theCursor = self.getCursor();
     if( aKey.name == "backspace" ) {
         self.deleteChar( function( data ) {  
             self.emit( 'cdUpdated', data );
             callback( data );
         } );
-    } else {
+    } else if( aKey.name == "return" ) {
+        var logicCode = self.determineLCEnter( theCursor );
+        switch( logicCode ) {
+            case 1: // cursor is on a space at the end of a line
+                // insert a new line below current line, containing a spaceword
+                lines.splice( theCursor.line, 0, "" );
+                var targetCursor = { 'line' : theCursor.line +1,
+                                     'word' : 0,
+                                     'char' : 0
+                                   };
+                self.addSpaceWord( targetCursor );
+                self.reindexLines();
+                self.moveCursorToNewLine( theCursor, targetCursor );
+            break;
+            case 2: // cursor is elsewhere
+                // split the current line into two lines at the position of the cursor
+                var splitLines = self.splitToTwoLines( theCursor );
+                // splice the lines
+                lines.splice( theCursor.line, 1, splitLines[ 0 ], splitLines[ 1 ] );
+                self.reindexLines();
+                // move the cursor to new line
+                var targetCursor = { 'line' : theCursor.line + 1,
+                                     'word' : 0,
+                                     'char' : 0
+                                   };
+                self.moveCursorToNewLine( theCursor, targetCursor );
+            break;
+        };
+    } else if( aKey.name == "space" ) { 
+        var logicCode = self.determineLCSpace( theCursor );
+        switch( logicCode ) {
+            case 1 : // cursor is on a space, at the end of a word or line or docu
+                var targetCursor = { 'line' : theCursor.line, 'word' : theCursor.word + 1, 'char' : 0 }
+                self.addSpaceWord( targetCursor );
+                self.moveCursorToNewSpaceWord( theCursor, targetCursor );
+                break;
+            case 2 : // cursor is at the beginning of a word
+                var targetCursor = theCursor;
+                self.addSpaceWord( targetCursor );
+                self.moveCursorToNewSpaceWord( theCursor, targetCursor );
+                break;
+            case 3 : // cursor is within a word
+                // split the current word into two
+                // finalize the head
+                var tobeSplit = lines[ theCursor.line ].words[ theCursor.word ];
+                var head = self.clone( tobeSplit );
+                head.chars.splice( theCursor.char, head.chars.length - theCursor.char - 1 );
+                head.rebuild();
+                // finalize the tail
+                var tail = self.clone( tobeSplit );
+                tail.chars.splice( 0, theCursor.char );
+                tail.rebuild();
+               
+                // splice head and tail to the line then rebuild
+                var theLine = lines[ theCursor.line ];
+                theLine.words.splice( theCursor.word, 1, head, tail );
+                lines[ theCursor.line ].rebuild();
+                // move cursor to tail
+                var targetCursor = { 'line' : theCursor.line, 'word' : theCursor.word + 1, 'char' : 0 }
+                self.moveCursorToNewSpaceWord( theCursor, targetCursor );
+        }
+                
+    }else {
         console.log( "aKey = " + aKey );
         self.insertChar( aKey, function( data ) {  
             self.emit( 'cdUpdated', data ); 

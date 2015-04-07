@@ -315,7 +315,7 @@ var connectArduino = function( daPath ) {
                         if( cFocus == 2 ) {
                             cd.updateCursor( obj.r, function( doRead ) {
                                 if( doRead ) { 
-                                console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                    console.log( ">>>>>>>>>> emitting cursorUpdate" );
                                     var theCursor = cd.getCursor();
                                     console.log( theCursor );
                                     io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );

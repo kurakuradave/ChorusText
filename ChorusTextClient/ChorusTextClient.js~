@@ -315,7 +315,7 @@ var connectArduino = function( daPath ) {
                         if( cFocus == 2 ) {
                             cd.updateCursor( obj.r, function( doRead ) {
                                 if( doRead ) { 
-                                console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                    console.log( ">>>>>>>>>> emitting cursorUpdate" );
                                     var theCursor = cd.getCursor();
                                     console.log( theCursor );
                                     io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
@@ -431,9 +431,8 @@ process.stdin.on('keypress', function (c, key) {
       //process.stdin.pause()
   } else {
       cd.changedByChar( key, function( data ){
-          //data.dor = "lalalalalalallaalalalalalalalallalalalalalalala";
           console.log( data );
-      } ); // experimental
+      } );
       /*
       if( key.name == "backspace" ){
           cd.deleteChar( function( data ) {

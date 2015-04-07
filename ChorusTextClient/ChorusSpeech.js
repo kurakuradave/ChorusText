@@ -111,7 +111,14 @@ function ChorusSpeech() {
 
 
 
+    self.playAlert = function() {
+        alrt = spawn( 'mplayer', [ './alerts/drip.ogg' ] );
+    };
     self.say = function( theText, withPunctuation, callback ) {
+        // experimental
+        if( theText == " " ) {
+            self.playAlert(); 
+        }
         // kill all ongoing speeches
         if( speechPID ) {
             self.killSpeech( speechPID );
