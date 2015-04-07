@@ -741,7 +741,8 @@ self.moveCursorToNewSpaceWord = function( oldCursor, newCursor ) {
         newCursor.char = 0;
         self.setCursorWord( newCursor.word, function() {  
             self.setCursorChar( 0, function() {
-                var data = { 'changedLines': lines[ oldCursor.line ],'cursor': oldCursor, 'newCursor' : newCursor };
+                var changedLines = [ lines[oldCursor.line] ];
+                var data = { 'changedLines': changedLines,'cursor': newCursor, 'newCursor' : newCursor };
                 self.emit( 'cdUpdated', data );
             } );
         } );
