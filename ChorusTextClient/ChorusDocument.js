@@ -615,7 +615,7 @@ self.deleteChar = function( callback ) {
     // preparing callback for socket    
     var changedLines = [];
     changedLines.push( oldLine );
-    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), newCursor : self.getCursorArduino() };
+    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), arduinoCursor : self.getCursorArduino() };
     console.log( data );
     callback( data );
 }
