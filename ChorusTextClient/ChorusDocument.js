@@ -854,6 +854,7 @@ self.changedByChar = function( aKey, callback ) {
     // calculate new position for the sliders
     // inform main app using emit
     var theCursor = self.getCursor();
+//    if( aKey.hasOwnProperty( "name" ) ) {
     if( aKey.name == "backspace" ) {
         self.deleteChar( function( data ) {  
             self.emit( 'cdUpdated', data );
@@ -925,7 +926,7 @@ self.changedByChar = function( aKey, callback ) {
                 var targetCursor = { 'line' : theCursor.line, 'word' : theCursor.word + 1, 'char' : 0 }
                 self.moveCursorToNewSpaceWord( theCursor, targetCursor );
         }
-                
+//    }    
     }else {
         console.log( "aKey = " + aKey );
         self.insertChar( aKey, function( data ) {  

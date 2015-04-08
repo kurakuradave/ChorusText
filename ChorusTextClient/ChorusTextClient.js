@@ -427,9 +427,10 @@ process.stdin.on('keypress', function (c, key) {
 
   console.log(0, c, key)
   if (key && key.ctrl && key.name == 'c') {
-      // do nothing
-      //process.stdin.pause()
+      cs.say( "Goodbye!" );
+      process.exit();
   } else {
+      cs.say( key.name );
       cd.changedByChar( key, function( data ){
           console.log( data );
       } );
