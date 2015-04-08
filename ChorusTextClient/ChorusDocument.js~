@@ -286,6 +286,8 @@ self.addSpaceLine = function( targetPos ) {
              }
     };
     theLine.words.push( self.addSpaceWord( targetPos ) );
+    lines[ targetPos.line ] = theLine;
+    console.log( lines[ targetPos.line ] );
 };
 
 
@@ -496,6 +498,11 @@ self.setCursorLine = function( val, callback ) {
 self.setCursorWord = function( val, callback ) {
     val = parseInt( val );
     var tline = ctCursor.getLine();
+    var cond1 = (val >= 0 );
+    var bw = ctCursor.getBaseWord();
+    var cond2 = val + bw >= 0;
+    var wl = lines[ tline ].words.length;
+    var cond3 = val + bw < wl;
     if( val >= 0 && val + ctCursor.getBaseWord() >= 0 && val + ctCursor.getBaseWord() < lines[ tline ].words.length ) {
         ctCursor.setWord( val );
         callback( true );
@@ -508,6 +515,10 @@ self.setCursorWord = function( val, callback ) {
 
 self.setCursorChar = function( val, callback ) {
     val = parseInt(val);
+    var line2get = ctCursor.getLine();
+    var word2get = ctCursor.getWord();
+    var theLine = lines[ line2get ];
+    var w = theLine.words[ word2get ];
     var theWord = lines[ ctCursor.getLine() ].words[ ctCursor.getWord() ];
     if( typeof theWord == "object" && theWord.chars ) {
         var tchar = theWord.chars.length;
@@ -655,7 +666,7 @@ self.insertChar = function( aKey, callback ) {
     //theCursor.char += 1; // not needed right?
     var changedLines = [];
     changedLines.push( oldLine );
-    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), 'newCursor' : self.getCursorArduino() };
+    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), 'arduinoCursor' : self.getCursorArduino() };
     callback( data );
 }
 
@@ -706,21 +717,26 @@ self.getCharText = function( cursor ) {
 
 
 self.moveCursorToNewLine = function( oldCursor, newCursor ) {
-
-        if( newCursor.line >= 9 ) {
-            var baseLineOffset = Math.floor( newCursor.line / 9 ) * 9;
+        var arduinoCursor = self.clone( newCursor );
+        
+        if( arduinoCursor.line >= 9 ) {
+            var baseLineOffset = Math.floor( arduinoCursor.line / 9 ) * 9;
             ctCursor.setBaseLine( baseLineOffset );
-            ctCursor.setLine( newCursor.line );
-            newCursor.line = newCursor.line % 9;
+            ctCursor.setLine( arduinoCursor.line );
+            arduinoCursor.line = arduinoCursor.line % 9;
         }
-
+        arduinoCursor.word = 0;
+        arduinoCursor.char = 0;
         newCursor.word = 0;
         newCursor.char = 0;
         var changedLines = [ lines[oldCursor.line], lines[oldCursor.line + 1] ];
-        self.setCursorLine( newCursor.line,function(){
-            self.setCursorWord( newCursor.word, function() {  
+        ctCursor.setBaseWord( 0 );
+        ctCursor.setBaseChar( 0 );   
+        self.setCursorLine( arduinoCursor.line,function(){
+            self.setCursorWord( newCursor.word, function() {
                 self.setCursorChar( 0, function() {
-                    var data = { 'changedLines': changedLines,'cursor': newCursor, 'newCursor' : newCursor };
+                    var data = { 'changedLines': changedLines,'cursor': newCursor, 'arduinoCursor' : arduinoCursor };
+                    console.log( data );
                     self.emit( 'cdUpdated', data );
                 });
             } );    
@@ -731,18 +747,20 @@ self.moveCursorToNewLine = function( oldCursor, newCursor ) {
 
 
 self.moveCursorToNewSpaceWord = function( oldCursor, newCursor ) {
+        var arduinoCursor = self.clone( newCursor );
         // remap values of the cursor into base values + slider values
-        if( newCursor.word >= 9 ) {
-            var baseWordOffset = Math.floor( newCursor.word / 9 ) * 9;
+        if( arduinoCursor.word >= 9 ) {
+            var baseWordOffset = Math.floor( arduinoCursor.word / 9 ) * 9;
             ctCursor.setBaseWord( baseWordOffset );
-            ctCursor.setWord( newCursor.word );
-            newCursor.word = newCursor.word % 9;
+            ctCursor.setWord( arduinoCursor.word );
+            arduinoCursor.word = arduinoCursor.word % 9;
         }
+        arduinoCursor.char = 0;
         newCursor.char = 0;
         self.setCursorWord( newCursor.word, function() {  
             self.setCursorChar( 0, function() {
                 var changedLines = [ lines[oldCursor.line] ];
-                var data = { 'changedLines': lines[ oldCursor.line ],'cursor': newCursor, 'newCursor' : newCursor };
+                var data = { 'changedLines': changedLines,'cursor': newCursor, 'arduinoCursor' : arduinoCursor };
                 self.emit( 'cdUpdated', data );
             } );
         } );
@@ -753,8 +771,8 @@ self.moveCursorToNewSpaceWord = function( oldCursor, newCursor ) {
 
 self.determineLCEnter = function( aCursor ) {
     var ret = 2;
-    if( self.getCharText( aCursor ) == " " &&
-        aCursor.words == lines[ aCursor.line ].words.length - 1 &&
+    if( self.getCharText( aCursor ) == " "  &&
+        aCursor.word == lines[ aCursor.line ].words.length - 1 &&
         aCursor.char == lines[ aCursor.line ].words[ aCursor.word ].chars.length - 1 ) {
         ret = 1;
     }
@@ -843,16 +861,21 @@ self.changedByChar = function( aKey, callback ) {
         } );
     } else if( aKey.name == "return" ) {
         var logicCode = self.determineLCEnter( theCursor );
+        console.log( "logic code is " +logicCode );
         switch( logicCode ) {
             case 1: // cursor is on a space at the end of a line
                 // insert a new line below current line, containing a spaceword
-                lines.splice( theCursor.line, 0, "" );
                 var targetCursor = { 'line' : theCursor.line +1,
                                      'word' : 0,
                                      'char' : 0
                                    };
-                self.addSpaceWord( targetCursor );
+                debugger;
+                var theLine = self.buildLine( targetCursor.line, "" );
+                lines.splice( targetCursor.line, 0, theLine );
                 self.reindexLines();
+                console.log( "here!" );
+                console.log( lines[ targetCursor.line ] );                                   
+
                 self.moveCursorToNewLine( theCursor, targetCursor );
             break;
             case 2: // cursor is elsewhere

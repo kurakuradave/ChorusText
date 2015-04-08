@@ -508,7 +508,7 @@ cd.on( 'cdUpdated', function( data ) {
     console.log( ">>>>>>>>>> emitting updateLines" );
     io.to( "read" ).emit( 'updateLines', ulObj );
 
-    toArd = "MS-" + data.newCursor.line + "-" + data.newCursor.word + "-" + data.newCursor.char + "\n";
+    toArd = "MS-" + data.arduinoCursor.line + "-" + data.arduinoCursor.word + "-" + data.arduinoCursor.char + "\n";
     console.log( "pushing: " + toArd );
 } );
 
