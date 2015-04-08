@@ -172,7 +172,7 @@ var ipLine = 0;
 var ipWord = 0;
 var ipChar = 0;
 
-cd.setVisualText( "This is just a dummy text.\nThat acts as a placeholder for the text.\nIt will be replaced as soon as the user import some text." );
+cd.setVisualText( "This is just a dummy text.\nThat acts as a placeholder for the text.\nIt will be replaced as soon as the user import some text.\n\nblah\n \n \n \nhere" );
 cd.parseToCTDocu();
 
 cs.setLanguage( "english" );

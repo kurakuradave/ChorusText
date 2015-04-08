@@ -615,7 +615,7 @@ self.deleteChar = function( callback ) {
     // preparing callback for socket    
     var changedLines = [];
     changedLines.push( oldLine );
-    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), newCursor : self.getCursorArduino() };
+    var data = { 'changedLines': changedLines,'cursor': self.getCursor(), arduinoCursor : self.getCursorArduino() };
     console.log( data );
     callback( data );
 }
@@ -624,7 +624,6 @@ self.deleteChar = function( callback ) {
 
 
 self.insertChar = function( aKey, callback ) {
-    
     // new character will be placed at the location of old character in the text,
     // old characters will be pushed rightwards
     var oldCursor = self.getCursor();
@@ -722,8 +721,9 @@ self.moveCursorToNewLine = function( oldCursor, newCursor ) {
         if( arduinoCursor.line >= 9 ) {
             var baseLineOffset = Math.floor( arduinoCursor.line / 9 ) * 9;
             ctCursor.setBaseLine( baseLineOffset );
+            arduinoCursor.line = arduinoCursor.line % 9;            
             ctCursor.setLine( arduinoCursor.line );
-            arduinoCursor.line = arduinoCursor.line % 9;
+
         }
         arduinoCursor.word = 0;
         arduinoCursor.char = 0;
@@ -731,7 +731,9 @@ self.moveCursorToNewLine = function( oldCursor, newCursor ) {
         newCursor.char = 0;
         var changedLines = [ lines[oldCursor.line], lines[oldCursor.line + 1] ];
         ctCursor.setBaseWord( 0 );
+        ctCursor.setWord( 0 );        
         ctCursor.setBaseChar( 0 );   
+        ctCursor.setChar( 0 );
         self.setCursorLine( arduinoCursor.line,function(){
             self.setCursorWord( newCursor.word, function() {
                 self.setCursorChar( 0, function() {
@@ -748,15 +750,19 @@ self.moveCursorToNewLine = function( oldCursor, newCursor ) {
 
 self.moveCursorToNewSpaceWord = function( oldCursor, newCursor ) {
         var arduinoCursor = self.clone( newCursor );
+        arduinoCursor.line %= 9;
+        
+        console.log( "! gotcha! " + arduinoCursor.line );
         // remap values of the cursor into base values + slider values
         if( arduinoCursor.word >= 9 ) {
             var baseWordOffset = Math.floor( arduinoCursor.word / 9 ) * 9;
             ctCursor.setBaseWord( baseWordOffset );
-            ctCursor.setWord( arduinoCursor.word );
             arduinoCursor.word = arduinoCursor.word % 9;
+            ctCursor.setWord( arduinoCursor.word );
         }
         arduinoCursor.char = 0;
         newCursor.char = 0;
+        ctCursor.setBaseChar( 0 );
         self.setCursorWord( newCursor.word, function() {  
             self.setCursorChar( 0, function() {
                 var changedLines = [ lines[oldCursor.line] ];
@@ -804,36 +810,43 @@ self.splitToTwoLines = function( aCursor ) {
     var headText = "";
     var headIndex = theLine.index;
     var tailIndex = headIndex +1;
-    // populate headText and tailText, exclusive of the current word
-    for( var i = 0; i < aCursor.word; i++ ) {
-        headText += theLine.words[ i ].text;
-    }
-    for( var j = aCursor.word +1; j < theLine.words.length; j++ ) {
-        tailText += theLine.words[ j ].text;    
-    }
-    tailText = tailText.substring( 0, tailText.length - 1 ); // get rid of trailing space
+    // make the two parts
+    if( ctCursor.getWord() == 0 && ctCursor.getChar() == 0 ) { // at the beginning of the line
+        var head = self.buildLine( theLine.index, "" );
+        var tail = theLine;
+        tail.index = theLine.index + 1;
+    } else { // cursor in the middle of a word
+        // populate headText and tailText, exclusive of the current word
+        for( var i = 0; i < aCursor.word; i++ ) {
+            headText += theLine.words[ i ].text;
+        }
+        for( var j = aCursor.word +1; j < theLine.words.length; j++ ) {
+            tailText += theLine.words[ j ].text;    
+        }
+        tailText = tailText.substring( 0, tailText.length - 1 ); // get rid of trailing space
 
-    // add characters from appropriate section of the current word to headText and tailText
-    var theWord = theLine.words[ aCursor.word ];
-    for( var i = 0; i < aCursor.char; i++ ) {
-        headText += theWord.chars[ i ].text;
-    }
-    var subTailText = " ";
-    for( var j = aCursor.char; j < theWord.chars.length; j++ ) {
-        subTailText += theWord.chars[ j ].text;
-    }
-    tailText = subTailText + tailText;
-    // add a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
-    if( headText[headText.length - 1] != " " )
-        headText += " ";
+        // add characters from appropriate section of the current word to headText and tailText
+        var theWord = theLine.words[ aCursor.word ];
+        for( var i = 0; i < aCursor.char; i++ ) {
+            headText += theWord.chars[ i ].text;
+        }
+        var subTailText = " ";
+        for( var j = aCursor.char; j < theWord.chars.length; j++ ) {
+            subTailText += theWord.chars[ j ].text;
+        }
+        tailText = subTailText + tailText;
+        // add a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
+        if( headText[headText.length - 1] != " " )
+            headText += " ";
     
-    if( tailText[ 0 ] == " " )
-        tailText = tailText.substring( 1, tailText.length );
-    if( tailText[ tailText.length - 1 ] == " " )
-        tailText = tailText.substring( 0, tailText.length-1 );
+        if( tailText[ 0 ] == " " )
+            tailText = tailText.substring( 1, tailText.length );
+        if( tailText[ tailText.length - 1 ] == " " )
+            tailText = tailText.substring( 0, tailText.length-1 );
 
-    head = self.buildLine( headIndex, headText );
-    tail = self.buildLine( tailIndex, tailText );
+        head = self.buildLine( headIndex, headText );
+        tail = self.buildLine( tailIndex, tailText );
+    }
     return [head, tail];
 };
 
@@ -854,6 +867,7 @@ self.changedByChar = function( aKey, callback ) {
     // calculate new position for the sliders
     // inform main app using emit
     var theCursor = self.getCursor();
+//    if( aKey.hasOwnProperty( "name" ) ) {
     if( aKey.name == "backspace" ) {
         self.deleteChar( function( data ) {  
             self.emit( 'cdUpdated', data );
@@ -861,7 +875,7 @@ self.changedByChar = function( aKey, callback ) {
         } );
     } else if( aKey.name == "return" ) {
         var logicCode = self.determineLCEnter( theCursor );
-        console.log( "logic code is " +logicCode );
+        debugger;
         switch( logicCode ) {
             case 1: // cursor is on a space at the end of a line
                 // insert a new line below current line, containing a spaceword
@@ -869,7 +883,6 @@ self.changedByChar = function( aKey, callback ) {
                                      'word' : 0,
                                      'char' : 0
                                    };
-                debugger;
                 var theLine = self.buildLine( targetCursor.line, "" );
                 lines.splice( targetCursor.line, 0, theLine );
                 self.reindexLines();
@@ -892,7 +905,7 @@ self.changedByChar = function( aKey, callback ) {
                 self.moveCursorToNewLine( theCursor, targetCursor );
             break;
         };
-    } else if( aKey.name == "space" ) { 
+    } else if( aKey.name == "space" ) {
         var logicCode = self.determineLCSpace( theCursor );
         switch( logicCode ) {
             case 1 : // cursor is on a space, at the end of a word or line or docu
@@ -925,7 +938,7 @@ self.changedByChar = function( aKey, callback ) {
                 var targetCursor = { 'line' : theCursor.line, 'word' : theCursor.word + 1, 'char' : 0 }
                 self.moveCursorToNewSpaceWord( theCursor, targetCursor );
         }
-                
+//    }    
     }else {
         console.log( "aKey = " + aKey );
         self.insertChar( aKey, function( data ) {  
