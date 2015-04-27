@@ -569,8 +569,9 @@ self.deleteChar = function( callback ) {
     var oldWord = oldLine.words[ oldCursor.word ];
     var oldChar = oldLine.words[ oldCursor.word ].chars[ oldCursor.char ];
 
-    // should try change this to =0?
     if( oldCursor.char >= 9 ) {
+        var baseCharOffset = Math.floor( oldCursor.char / 9 ) * 9;
+        ctCursor.setBaseChar( baseCharOffset );
         oldCursor.char = oldCursor.char % 9;
     }
 
@@ -622,7 +623,9 @@ self.insertChar = function( aKey, callback ) {
     //If any char is inserted here, it will placed at index 0, the leftmost one, 
     //this is equivalent with pressing the pagedown button once, and then insert the char on leftmost place.
     if( oldCursor.char >= 9 ) {
-        oldCursor.char = oldCursor.char % 9; // 
+        var baseCharOffset = Math.floor( oldCursor.char / 9 ) * 9;
+        ctCursor.setBaseChar( baseCharOffset );
+        oldCursor.char = oldCursor.char % 9;  
     }
     var oldCharIndex = ctCursor.getBaseChar() + oldCursor.char;
     
