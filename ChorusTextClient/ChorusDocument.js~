@@ -158,6 +158,9 @@ self.buildLine = function( someIndex, someLine ) {
         debugger;
         console.log( aWordObj );
     }
+    
+    // for lines that contains a spaceword
+    if( someLine == "" ) someLine = " ";
 
     return { 'index' : someIndex, 
              'text' : someLine, 
@@ -166,9 +169,7 @@ self.buildLine = function( someIndex, someLine ) {
                  this.text = "";
                  for( var i = 0; i < this.words.length; i++ ) {
                      this.words[ i ].index = i;
-                     var w = this.words[ i ].text;
-                     
-                     this.text += w; // not adding space here coz there's a space at end of each word already
+                     this.text += this.words[ i ].text; // not adding space here coz there's a space at end of each word already
                      console.log( ">>>>>>>>>>>>>>>>>>>>" + this.text );
                  }
                  this.text.substring( 0, this.text.length );
@@ -809,6 +810,7 @@ self.splitToTwoLines = function( aCursor ) {
         for( var i = 0; i < aCursor.word; i++ ) {
             headText += theLine.words[ i ].text;
         }
+        headText = headText.substring( 0, headText.length - 1 );
         for( var j = aCursor.word +1; j < theLine.words.length; j++ ) {
             tailText += theLine.words[ j ].text;    
         }

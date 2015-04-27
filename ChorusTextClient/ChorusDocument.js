@@ -810,6 +810,7 @@ self.splitToTwoLines = function( aCursor ) {
         for( var i = 0; i < aCursor.word; i++ ) {
             headText += theLine.words[ i ].text;
         }
+
         for( var j = aCursor.word +1; j < theLine.words.length; j++ ) {
             tailText += theLine.words[ j ].text;    
         }
@@ -825,10 +826,11 @@ self.splitToTwoLines = function( aCursor ) {
             subTailText += theWord.chars[ j ].text;
         }
         tailText = subTailText + tailText;
+        /* why would I want this?
         // add a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
         if( headText[headText.length - 1] != " " )
             headText += " ";
-    
+        */
         if( tailText[ 0 ] == " " )
             tailText = tailText.substring( 1, tailText.length );
         if( tailText[ tailText.length - 1 ] == " " )
