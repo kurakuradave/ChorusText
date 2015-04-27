@@ -155,23 +155,13 @@ self.buildLine = function( someIndex, someLine ) {
         var aWordObj = self.buildWord( i, tword );
         aWordObj.rebuild();
         wordObjs[ i ] = aWordObj;
+        debugger;
         console.log( aWordObj );
     }
-    // this add spaceword at the end of the line
-    /*
-    wordObjs[ wordObjs.length ] = { 'index' : wordObjs.length, 
-             'text' : " ", 
-             'chars' : [{'index':0, 'text':" "}],
-             'rebuild' : function() {
-                 //console.log( "rebuilding characters..." );
-                 this.text = "";
-                 for( var i = 0; i < this.chars.length; i++ ) {
-                     this.chars[ i ].index = i;
-                     this.text += this.chars[ i ].text;
-                 }
-             }
-    };;// experimental
-    */
+    
+    // for lines that contains a spaceword
+    if( someLine == "" ) someLine = " ";
+
     return { 'index' : someIndex, 
              'text' : someLine, 
              'words' : wordObjs,
@@ -180,7 +170,7 @@ self.buildLine = function( someIndex, someLine ) {
                  for( var i = 0; i < this.words.length; i++ ) {
                      this.words[ i ].index = i;
                      this.text += this.words[ i ].text; // not adding space here coz there's a space at end of each word already
-                     console.log( this.text );
+                     console.log( ">>>>>>>>>>>>>>>>>>>>" + this.text );
                  }
                  this.text.substring( 0, this.text.length );
                  //console.log( "line rebuilt!" );
@@ -875,7 +865,6 @@ self.changedByChar = function( aKey, callback ) {
         } );
     } else if( aKey.name == "return" ) {
         var logicCode = self.determineLCEnter( theCursor );
-        debugger;
         switch( logicCode ) {
             case 1: // cursor is on a space at the end of a line
                 // insert a new line below current line, containing a spaceword
