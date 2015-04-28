@@ -732,14 +732,22 @@ void loop() {
     } 
   }
   
+   
    int16_t adc2, adc3;
-   adc2 = ads1115.readADC_SingleEnded(2);
-   adc3 = ads1115.readADC_SingleEnded(3);
+   for( int i = 0; i < 5; i++ ){
+       adc2 += ads1115.readADC_SingleEnded(2);
+   }
+   adc2 = abs( adc2 / 5 );
+   
+   for( int i = 0; i < 5; i++ ) {
+       adc3 = ads1115.readADC_SingleEnded(3);
+   }
+   adc3 = abs( adc3 / 5 );
    updateSpeechRate( "sg", adc2, old_adc2, old_sg );
    updateSpeechRate( "sc", adc3, old_adc3, old_sc );
-    
+   
+   
   // process Sliders
-  //uint8_t i;
   
   rotDial.readDialValue();
   if( rotDial.getIsMoving() ){  
@@ -845,7 +853,7 @@ byte shiftIn(int myDataPin, int myClockPin) {
 
 
 void updateSpeechRate( String name, int16_t val, int16_t &old_val, int &old_sr ) {
-     if( abs( old_val - val ) > 30 ) { 
+     if( abs( old_val - val ) > 300 ) { 
        int r = floor( val / 600 ) * 10 + 50;
        if( r != old_sr ) {
          Serial.println( String("{\""+ name + "\":") + String( r ) + String( "}" ) ); 

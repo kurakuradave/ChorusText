@@ -732,14 +732,16 @@ void loop() {
     } 
   }
   
+   
    int16_t adc2, adc3;
    adc2 = ads1115.readADC_SingleEnded(2);
    adc3 = ads1115.readADC_SingleEnded(3);
+   
    updateSpeechRate( "sg", adc2, old_adc2, old_sg );
    updateSpeechRate( "sc", adc3, old_adc3, old_sc );
-    
+   
+   
   // process Sliders
-  //uint8_t i;
   
   rotDial.readDialValue();
   if( rotDial.getIsMoving() ){  
