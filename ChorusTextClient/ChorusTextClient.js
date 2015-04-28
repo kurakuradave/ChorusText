@@ -313,6 +313,14 @@ var connectArduino = function( daPath ) {
                     }
                     if( obj.hasOwnProperty( 'r' ) ){ // read
                         if( cFocus == 2 ) {
+                        if( obj.r == "a" ) {
+                            readAllText();
+                        }
+                        console.log( "=======================" );
+                        console.log( obj );
+                      console.log( "=======================" );
+                            ctRead( obj );
+                            /*
                             cd.updateCursor( obj.r, function( doRead ) {
                                 if( doRead ) { 
                                     console.log( ">>>>>>>>>> emitting cursorUpdate" );
@@ -334,6 +342,7 @@ var connectArduino = function( daPath ) {
                                     cs.sys_say( "no_more_text" );
                                 }
                             } );
+                            */
                         }
                     }
                     if( obj.hasOwnProperty( 'v' ) ){ // verify current line/word/char
@@ -380,6 +389,43 @@ var connectArduino = function( daPath ) {
         }
     });
 };
+
+
+
+
+var readAllText = function() {
+    var wholeText = cd.getVisualText();
+    cs.say( wholeText );
+};
+
+
+
+
+var ctRead = function( aReadObj ) {
+                            cd.updateCursor( aReadObj.r, function( doRead ) {
+                                if( doRead ) { 
+                                    console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                    var theCursor = cd.getCursor();
+                                    console.log( theCursor );
+                                    io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
+                                    var theCursorBases = cd.getCursorBases();
+                                    var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
+                                    console.log( msg );
+                                    //sp.write( msg );
+                                    var tfs = cd.getTextForSpeech( aReadObj.r );
+                                    if( tfs != "" ) {
+                                        if( aReadObj.r.hasOwnProperty( 'c' ) ) // char
+                                            cs.say( tfs, "punctuation" );
+                                        else
+                                            cs.say( tfs );
+                                    }
+                                } else {
+                                    cs.sys_say( "no_more_text" );
+                                }
+                            } );
+};
+
+
 
 
 var announceIPAddress = function( callback ) {
