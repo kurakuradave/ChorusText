@@ -713,10 +713,10 @@ self.moveCursorToMergedWord = function( oldCursor, newCursor ) {
     var baseWordOffset = Math.floor( arduinoCursor.word / 9 ) * 9;
     ctCursor.setBaseWord( baseWordOffset );
 
-    if( arduinoCursor.word >= 9 ) {
+    //if( arduinoCursor.word >= 9 ) {
         arduinoCursor.word = arduinoCursor.word % 9;
         ctCursor.setWord( arduinoCursor.word );
-    }
+    //}
     
     if( arduinoCursor.char >= 9 ) {
         var baseCharOffset = Math.floor( arduinoCursor.char / 9 ) * 9;
@@ -734,6 +734,48 @@ self.moveCursorToMergedWord = function( oldCursor, newCursor ) {
                 self.emit( 'cdUpdated', data );
             } );
     } );
+};
+
+
+
+
+self.moveCursorToMergedLine = function( oldCursor, newCursor ) {
+        var arduinoCursor = self.clone( newCursor );
+        
+        ctCursor.setLine( newCursor.line ); // move the cursor to prev line
+        if( arduinoCursor.line >= 9 ) {
+            var baseLineOffset = Math.floor( arduinoCursor.line / 9 ) * 9;
+            ctCursor.setBaseLine( baseLineOffset );
+            arduinoCursor.line = arduinoCursor.line % 9;            
+            ctCursor.setLine( arduinoCursor.line );
+
+        }
+
+        if( arduinoCursor.word >= 9 ) {
+            var baseWordOffset = Math.floor( arduinoCursor.word / 9 ) * 9;
+            ctCursor.setBaseWord( baseWordOffset );
+            arduinoCursor.word = arduinoCursor.word % 9;            
+            ctCursor.setWord( arduinoCursor.word );
+
+        }
+
+        if( arduinoCursor.char >= 9 ) {
+            var baseCharOffset = Math.floor( arduinoCursor.char / 9 ) * 9;
+            ctCursor.setBaseChar( baseCharOffset );
+            arduinoCursor.char = arduinoCursor.char % 9;            
+            ctCursor.setChar( arduinoCursor.char );
+
+        }
+        var changedLines = [ lines[newCursor.line ] ];
+        self.setCursorLine( arduinoCursor.line,function(){
+            self.setCursorWord( arduinoCursor.word, function() {
+                self.setCursorChar( arduinoCursor.char, function() {
+                    var data = { 'deleteLine' : oldCursor.line,'changedLines': changedLines,'cursor': newCursor, 'arduinoCursor' : arduinoCursor };
+                    console.log( changedLines[0].words );
+                    self.emit( 'cdUpdated', data );
+                });
+            } );    
+        } );    
 };
 
 
@@ -772,6 +814,7 @@ self.moveCursorToNewLine = function( oldCursor, newCursor ) {
 
 
 
+
 self.moveCursorToNewSpaceWord = function( oldCursor, newCursor ) {
         var arduinoCursor = self.clone( newCursor );
         arduinoCursor.line %= 9;
@@ -803,7 +846,11 @@ self.determineLCBackspace = function( aCursor ) {
     var ret = 1;
     if( aCursor.char == 0 ) {
         if( aCursor.word == 0 ) { 
-            ret = 3; // at beginning of a line
+            if( aCursor.line == 0 ) {
+                ret = 4; // at beginning of document
+            } else {
+                ret = 3; // at beginning of a line
+            }
         } else {
             ret = 2; // at beginning of a word
         }
@@ -870,18 +917,16 @@ self.splitToTwoLines = function( aCursor ) {
         for( var i = 0; i < aCursor.char; i++ ) {
             headText += theWord.chars[ i ].text;
         }
-        headText = headText.trim();
         
         var subTailText = " ";
         for( var j = aCursor.char; j < theWord.chars.length; j++ ) {
             subTailText += theWord.chars[ j ].text;
         }
         tailText = subTailText + tailText;
-        /* why would I want this?
-        // add a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
-        if( headText[headText.length - 1] != " " )
-            headText += " ";
-        */
+        // remove a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
+        if( headText[headText.length - 1] == " " )
+            headText = headText.substring( 0, headText.length-1 );
+
         if( tailText[ 0 ] == " " )
             tailText = tailText.substring( 1, tailText.length );
         if( tailText[ tailText.length - 1 ] == " " )
@@ -938,12 +983,39 @@ self.changedByChar = function( aKey, callback ) {
                                   'word' : targetWordLoc,
                                   'char' : targetCharLoc
                                 };
-               debugger;
                self.moveCursorToMergedWord( theCursor, targetCursor );        
             break;
             case 3 : // cursor is at the beginning of a line
                 // merge current line with previous line
-                
+                // then move the cursor to the last char of the previous line.
+                debugger;
+                var targetLine = theCursor.line - 1;
+                var currentLine = theCursor.line;
+                var cLine = lines[ currentLine ];
+                var pLine = lines[ targetLine ];
+                var targetWord = pLine.words.length - 1;
+                var targetChar = pLine.words[ targetWord ].chars.length - 1; // skip the ending space of the word
+                var targetCursor = { 'line' : targetLine, 
+                                     'word' : targetWord,
+                                     'char' : targetChar
+                                   };
+                var mLineText = ( pLine.text );
+                if( mLineText[ mLineText.length-1 ] == " " ){
+                    console.log( "!!!!!!!!!!!!!!!!! taking off trailing space at the end of mLineText" );
+                    mLineText = mLineText.substring( 0, mLineText.length - 1 );
+                }
+                console.log( "!!!!!!!!!!!!!!!!!!!!!!!! mLineText before merging with cLine.text is " + mLineText );                
+                 mLineText += cLine.text;
+                 if( mLineText[ mLineText.length -1 ] == " " ){
+                     mLineText = mLineText.substring( 0, mLineText.length - 1 );
+                 }
+                var mLine = self.buildLine( targetLine, mLineText );
+                lines.splice( targetLine, 2, mLine );
+                self.reindexLines();
+                self.moveCursorToMergedLine( theCursor, targetCursor );
+            break;
+            case 4: // cursor is at the first line, first word, first char, nothing to backspace
+                // do nothing
             break;
         }
     } else if( aKey.name == "return" ) {
