@@ -854,7 +854,7 @@ self.splitToTwoLines = function( aCursor ) {
         var head = self.buildLine( theLine.index, "" );
         var tail = theLine;
         tail.index = theLine.index + 1;
-    } else { // cursor in the middle of a word
+    } else { // cursor at the beginning of a word or in the middle of a word
         // populate headText and tailText, exclusive of the current word
         for( var i = 0; i < aCursor.word; i++ ) {
             headText += theLine.words[ i ].text;
@@ -870,22 +870,23 @@ self.splitToTwoLines = function( aCursor ) {
         for( var i = 0; i < aCursor.char; i++ ) {
             headText += theWord.chars[ i ].text;
         }
+        
         var subTailText = " ";
         for( var j = aCursor.char; j < theWord.chars.length; j++ ) {
             subTailText += theWord.chars[ j ].text;
         }
         tailText = subTailText + tailText;
-        /* why would I want this?
-        // add a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
-        if( headText[headText.length - 1] != " " )
-            headText += " ";
-        */
+        // remove a space at the end of headText and make sure there are no spaces at the beginning and end of tailText
+        if( headText[headText.length - 1] == " " )
+            headText = headText.substring( 0, headText.length-1 );
+
         if( tailText[ 0 ] == " " )
             tailText = tailText.substring( 1, tailText.length );
         if( tailText[ tailText.length - 1 ] == " " )
             tailText = tailText.substring( 0, tailText.length-1 );
 
         head = self.buildLine( headIndex, headText );
+        console.log( headText+"#" );
         tail = self.buildLine( tailIndex, tailText );
     }
     return [head, tail];
@@ -955,9 +956,6 @@ self.changedByChar = function( aKey, callback ) {
                 var theLine = self.buildLine( targetCursor.line, "" );
                 lines.splice( targetCursor.line, 0, theLine );
                 self.reindexLines();
-                console.log( "here!" );
-                console.log( lines[ targetCursor.line ] );                                   
-
                 self.moveCursorToNewLine( theCursor, targetCursor );
             break;
             case 2: // cursor is elsewhere
