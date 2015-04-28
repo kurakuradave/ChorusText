@@ -713,10 +713,10 @@ self.moveCursorToMergedWord = function( oldCursor, newCursor ) {
     var baseWordOffset = Math.floor( arduinoCursor.word / 9 ) * 9;
     ctCursor.setBaseWord( baseWordOffset );
 
-    if( arduinoCursor.word >= 9 ) {
+    //if( arduinoCursor.word >= 9 ) {
         arduinoCursor.word = arduinoCursor.word % 9;
         ctCursor.setWord( arduinoCursor.word );
-    }
+    //}
     
     if( arduinoCursor.char >= 9 ) {
         var baseCharOffset = Math.floor( arduinoCursor.char / 9 ) * 9;
