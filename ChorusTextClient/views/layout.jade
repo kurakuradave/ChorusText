@@ -10,35 +10,42 @@ html( ng-app='ctpiapp' )
         script( type='text/javascript', src='/socket.io/socket.io.js' )        
         script( type='text/javascript', src='javascripts/ctdirective.js' )        
         script( type='text/javascript', src='javascripts/ctpiapp.js' )        
-
-
-        .navbar.navbar-fixed-top
-            .navbar-header
-                a.navbar-brand(href="/") 
-                    |ChorusText
-            ul.nav.navbar-nav.navbar-left
-                li.active
+         
+        div
+          nav.navbar.navbar-default.navbar-fixed-top
+            div.container-fluid
+              div.navbar-header
+                button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#ct-navbar-collapse-1")
+                  span.sr-only Toggle navigation
+                  span.icon-bar
+                  span.icon-bar
+                  span.icon-bar
+                span
+                  a.navbar-brand(href="/") ChorusText
+              div.collapse.navbar-collapse(id="ct-navbar-collapse-1")
+                ul.nav.navbar-nav.navbar-left
+                  li.active
                     a(href="/import")
-                        span.glyphicon.glyphicon-import
-                        |    Import
-                li.active 
+                      span.glyphicon.glyphicon-import
+                      | &nbsp Import
+                  li.active
                     a(href="/read")
-                        span.glyphicon.glyphicon-eye-open
-                        |    Read
-                li.active
+                      span.glyphicon.glyphicon-eye-open
+                      | &nbsp Read
+                  li.active
                     a(href="/settings")
-                      span.glyphicon.glyphicon-wrench
-                      |    Settings
-            ul.nav.navbar-nav.navbar-right
-                li.active 
+                      span.glyphicon.glyphicon-wrench 
+                      | &nbsp Settings
+                ul.nav.navbar-nav.navbar-right
+                  li.active
                     a(href="/help")
-                        span.glyphicon.glyphicon-question-sign
-                        |    Help
-                li.active 
+                      span.glyphicon.glyphicon-question-sign 
+                      | &nbsp Help
+                  li.active
                     a(href="/about")
-                        span.glyphicon.glyphicon-info-sign
-                        |    About
-            
+                      span.glyphicon.glyphicon-info-sign 
+                      | &nbsp About                      
+      
 
   body
     script.
