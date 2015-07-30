@@ -154,7 +154,13 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
         socket.on( 'updateLines', function( ulObj ) {  
             $scope.$apply( function() {
-                // cut $scope.loines into head and tail, and later combine into: head, newline(s), and tail.
+                // first off, check if any lines should be deleted
+                if( ulObj.hasOwnProperty( "deleteLine" ) ) {
+                    var toDel = ulObj.deleteLine;
+                    $scope.lines.splice( toDel, 1 );
+                }
+            
+                // cut $scope.lines into head and tail, and later combine into: head, newline(s), and tail.
                 var cutpoint = ulObj.changedLines[0].index;
                 var head = [];
                 for( var i = 0; i < cutpoint; i++ ){
@@ -165,6 +171,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                 for( var i = cutpoint + 1; i < $scope.lines.length; i++ ) {
                     tail.push( $scope.lines[ i ] );
                 }
+                
 
                 var newLines = head.concat( ulObj.changedLines ).concat( tail );
                 console.log( newLines );

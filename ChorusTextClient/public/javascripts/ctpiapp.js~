@@ -116,7 +116,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                 for( var j = 0; j < $scope.newLine.words.length; j++ ) {
                     temp += $scope.newLine.words[ j ].text; 
                 }
-                temp += "&nbsp"; // add a space for accurate display oh HTML
+                //temp += "&nbsp"; // add a space for accurate display oh HTML
                 newCharWordLineText += temp;
                 if( newCharWordLineText.indexOf( "\n" ) != -1 )
                     newCharWordLineText.substring( newCharWordLineText.length - 2 );
@@ -154,7 +154,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
 
         socket.on( 'updateLines', function( ulObj ) {  
             $scope.$apply( function() {
-                // cut $scope.loines into head and tail, and later combine into: head, newline(s), and tail.
+                // cut $scope.lines into head and tail, and later combine into: head, newline(s), and tail.
                 var cutpoint = ulObj.changedLines[0].index;
                 var head = [];
                 for( var i = 0; i < cutpoint; i++ ){
@@ -165,6 +165,7 @@ angular.module( 'ctpiapp', ['ctpidirective', 'ngSanitize'] )
                 for( var i = cutpoint + 1; i < $scope.lines.length; i++ ) {
                     tail.push( $scope.lines[ i ] );
                 }
+                
 
                 var newLines = head.concat( ulObj.changedLines ).concat( tail );
                 console.log( newLines );
