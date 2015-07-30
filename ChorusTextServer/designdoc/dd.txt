@@ -1,0 +1,61 @@
+ChorusTextClient (Device)
+=========================
+
+Sends (To ChorusTextServer):
+* Cursor Updates [Socket]
+* Initiate writing
+* Changed Line [Socket]
+
+Receives (From ChorusTextServer):
+* Reader Status following acknowledgement of Cursor Updates [Socket]
+* Writer Status following acknowledgement of Initiate Writing [Socket]
+* Changed Lines committed by other authors [Socket]
+
+
+
+ChorusTextCollaborativeDocument (CCDocu) (Persisted)
+========================================
+
+{
+    title: "someTitle",
+    lastUpdate: {datetime},
+    lines: [ {}, {}, ... {} ]
+}
+
+
+line (In CCDocu / Not a separate Collection)
+====
+{
+    contents: "A line of text in visual form"    
+}
+
+
+user (Persisted)
+====
+{
+    userid: "somestringasid",
+    fullName: "some string",
+    displayName: "somestring",
+    deviceid: "somestringasid",
+    connectionStatus; "WEB/DEVICE/OFFLINE"   
+}
+
+
+Session (Not persisted)
+=======
+{
+    ccdocu: {CCDocu},
+    authors: [ "userid", "userid", ... "userid" ],
+    sessionid: "somestringasid",
+    lineOccupancies: [ {LineOccupancy}, {LineOccupancy}, ... {LineOccupancy} ] // array length tallies with CCDocu's lines length
+    
+}}
+
+
+
+LineOccupancy (Not Persisted)
+=============
+{
+    writer: "userid",
+    reader: [ "userid", "userid", ... "userid" ]
+}

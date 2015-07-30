@@ -217,7 +217,7 @@ self.buildChar = function( someIndex, someChar ) {
 
 
 self.buildVisualText = function() {
-    this.visualText = "";
+    visualText = "";
     for( i = 0; i < lines.length; i++ ) {
         lines[ i ].index = i;
         visualText += lines[ i ].text + "\n";
@@ -276,6 +276,14 @@ self.addSpaceLine = function( targetPos ) {
     theLine.words.push( self.addSpaceWord( targetPos ) );
     lines[ targetPos.line ] = theLine;
     console.log( lines[ targetPos.line ] );
+};
+
+
+
+
+self.getVisualText = function() {
+    self.buildVisualText();
+    return visualText;
 };
 
 
@@ -524,6 +532,13 @@ self.setCursorChar = function( val, callback ) {
 self.getLines = function() {
     return lines;
 };
+
+
+
+
+self.getLineCount = function() {
+    return lines.length;
+}
 
 
 
@@ -1001,10 +1016,8 @@ self.changedByChar = function( aKey, callback ) {
                                    };
                 var mLineText = ( pLine.text );
                 if( mLineText[ mLineText.length-1 ] == " " ){
-                    console.log( "!!!!!!!!!!!!!!!!! taking off trailing space at the end of mLineText" );
                     mLineText = mLineText.substring( 0, mLineText.length - 1 );
                 }
-                console.log( "!!!!!!!!!!!!!!!!!!!!!!!! mLineText before merging with cLine.text is " + mLineText );                
                  mLineText += cLine.text;
                  if( mLineText[ mLineText.length -1 ] == " " ){
                      mLineText = mLineText.substring( 0, mLineText.length - 1 );

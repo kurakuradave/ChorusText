@@ -30,7 +30,8 @@ var cs = new ChorusSpeech();
 var CD = require( './ChorusDocument.js' );
 var cd = new CD();
 var SerialPort = serialPort.SerialPort; // localize object constructor
-
+var cfg = require( './LongViewConfig.js' );
+var fullServerAddress = cfg.serverAddress + ":" + cfg.serverPort;
 
 
 
@@ -46,6 +47,8 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var gnome = require( './routes/gnome' );
+gnome.setCD( cd );
 
 var app = express();
 
@@ -66,6 +69,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use( '/gnome', gnome );
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -101,9 +105,22 @@ app.use(function(err, req, res, next) {
 
 
 
-// ==================================================
-// socket.io application logic
-// ==================================================
+//=============================================================
+// socket.io application logic (RUNNING AS CLIENT TO WEBSERVER)
+//=============================================================
+// socket.io stuff
+var ioClient = require( 'socket.io-client' );
+var socketClient = ioClient.connect(fullServerAddress, {reconnect: true});
+socketClient.on('connect', function( data ) { 
+     console.log( "ChorusText device connected to server via socket! " + data.msg );
+});
+
+
+
+
+// =================================================================
+// socket.io application logic (RUNNING AS SERVER FOR OTHER DEVICES)
+// =================================================================
 
 var importedRawText = "";
 io.on('connection', function(socket){
@@ -282,6 +299,8 @@ var connectArduino = function( daPath ) {
                             break;
                             case 1 :
                                 cs.sys_say( "location" );
+                                // test connecting to server via socket
+                                socketClient.emit( 'connect', { "ccdocuID" : "testdocu", "userID" : "CT0079" } );
                             break;
                             case 2 :
                                 cs.sys_say( "main" );
@@ -313,6 +332,14 @@ var connectArduino = function( daPath ) {
                     }
                     if( obj.hasOwnProperty( 'r' ) ){ // read
                         if( cFocus == 2 ) {
+                        if( obj.r == "a" ) {
+                            readAllText();
+                        }
+                        console.log( "=======================" );
+                        console.log( obj );
+                      console.log( "=======================" );
+                            ctRead( obj );
+                            /*
                             cd.updateCursor( obj.r, function( doRead ) {
                                 if( doRead ) { 
                                     console.log( ">>>>>>>>>> emitting cursorUpdate" );
@@ -334,6 +361,7 @@ var connectArduino = function( daPath ) {
                                     cs.sys_say( "no_more_text" );
                                 }
                             } );
+                            */
                         }
                     }
                     if( obj.hasOwnProperty( 'v' ) ){ // verify current line/word/char
@@ -380,6 +408,43 @@ var connectArduino = function( daPath ) {
         }
     });
 };
+
+
+
+
+var readAllText = function() {
+    var wholeText = cd.getVisualText();
+    cs.say( wholeText );
+};
+
+
+
+
+var ctRead = function( aReadObj ) {
+                            cd.updateCursor( aReadObj.r, function( doRead ) {
+                                if( doRead ) { 
+                                    console.log( ">>>>>>>>>> emitting cursorUpdate" );
+                                    var theCursor = cd.getCursor();
+                                    console.log( theCursor );
+                                    io.to( "read" ).emit( 'cursorUpdate', { 'cursor' : theCursor } );
+                                    var theCursorBases = cd.getCursorBases();
+                                    var msg = "MS-" + ( theCursor.line - theCursorBases.line ) + "-" + ( theCursor.word - theCursorBases.word ) + "-" + ( theCursor.char - theCursorBases.char ) + "\n" ;
+                                    console.log( msg );
+                                    //sp.write( msg );
+                                    var tfs = cd.getTextForSpeech( aReadObj.r );
+                                    if( tfs != "" ) {
+                                        if( aReadObj.r.hasOwnProperty( 'c' ) ) // char
+                                            cs.say( tfs, "punctuation" );
+                                        else
+                                            cs.say( tfs );
+                                    }
+                                } else {
+                                    cs.sys_say( "no_more_text" );
+                                }
+                            } );
+};
+
+
 
 
 var announceIPAddress = function( callback ) {
