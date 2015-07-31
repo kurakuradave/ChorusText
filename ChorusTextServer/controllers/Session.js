@@ -8,11 +8,11 @@ function Session( aCCDocuID, aUserID ) {
     self.ccdocuID = aCCDocuID;
     self.users = [];
 
-    self.addUser = function( aUserID ) {
+    self.addUser = function( aUserID, callback ) {
         if( self.users.indexOf( aUserID ) == -1 ) {          
             self.users.push( aUserID );
         }
-        self.emit( "UserAdded", { "sessionID" : self.sessionID, "userID" : aUserID, "users" : self.users } );
+        callback( { "sessionID" : self.sessionID, "userID" : aUserID, "users" : self.users } );
     };
     
     console.log( "New Session Created: " + self.sessionID );

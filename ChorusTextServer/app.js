@@ -17,11 +17,12 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
-
+debugger;
 var app = express();
 
 // for enabling passback from bin/www
 app.setCTServer = function( aServer ) {
+    debugger;
     CTServer = aServer; // receive passback from bin/www
     io = new CTSocket( CTServer ); // create socket
     //link io to sm

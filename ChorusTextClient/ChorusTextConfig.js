@@ -1,4 +1,6 @@
 module.exports = {
     serverAddress: "http://localhost",
-    serverPort: 3000
+    serverPort: 4000,
+    devID: "Proto_One",
+    devNum: "CT001"
 }

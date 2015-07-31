@@ -2,17 +2,19 @@
 function CTSocket( daServer ) {
     var self = this;
     self = require( 'socket.io' )( daServer );
-    self.sm = {} // placeholder for linking Session Manager
+    var sm = {} // placeholder for linking Session Manager
     
     // attach socket listeners    
     self.sockets.on( 'connection', function( socket ) {  
-        socket.on( 'connect', function( data ) {  
-            console.log( "incoming socket connection received:" );
-            console.log( data );
-            self.sm.userJoins( data.ccdocuID, data.userID );
-            self.sm.once( 'userJoinsDone', function( data ) {  
-                var daMsg = data.userID + " is added to " + data.sessionID + ". List of Users: " + data.users; 
-                socket.emit( 'connect', { "msg" : daMsg } );
+        socket.on( 'konek', function( data ) {
+            self.emit( 'konek', { "msg" : "Hello from server!" } );
+        } );
+        socket.on( 'cnect2ssn', function( data ) {  
+            debugger;
+            sm.userJoins( data.ccdocuID, data.userID, function( arg ) {  
+                socket.join( arg.sessionID );
+                var daMsg = arg.userID + " is added to " + arg.sessionID + ". List of Users: " + arg.users; 
+                self.to( arg.sessionID ).emit( 'cnected2ssn', { "msg" : daMsg } );
             } );
         } );
         socket.on( 'cursorUpdate', function( data ) {  
@@ -21,9 +23,10 @@ function CTSocket( daServer ) {
     } );
     
     self.linkSM = function( anSM ) {
-        self.sm = anSM;
+        sm = anSM;
+        sm.linkSocket( self );
         console.log( "io now linked to sm " );
-        console.log( self.sm );
+        console.log( sm );
         console.log( "----- from io" );
     };
     

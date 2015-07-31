@@ -30,10 +30,12 @@ var cs = new ChorusSpeech();
 var CD = require( './ChorusDocument.js' );
 var cd = new CD();
 var SerialPort = serialPort.SerialPort; // localize object constructor
-var cfg = require( './LongViewConfig.js' );
+var cfg = require( './ChorusTextConfig.js' );
 var fullServerAddress = cfg.serverAddress + ":" + cfg.serverPort;
-
-
+var reqq = require( 'request' );
+var ccdocuID = "";
+var userID = cfg.devID;
+var devNum = cfg.devNum;
 
 // ========================================================
 // setup for the Web Interface Server - Express & Socket.io
@@ -111,9 +113,15 @@ app.use(function(err, req, res, next) {
 // socket.io stuff
 var ioClient = require( 'socket.io-client' );
 var socketClient = ioClient.connect(fullServerAddress, {reconnect: true});
-socketClient.on('connect', function( data ) { 
-     console.log( "ChorusText device connected to server via socket! " + data.msg );
+
+socketClient.on('cnected2ssn', function( data ) { 
+     console.log( "ChorusText device connected to server via socket! " ); 
+     console.log( data.msg );
 });
+
+socketClient.on( 'newUserJoined', function( data ) {  
+    console.log( "A new user just joined: " + data.userID );
+} );
 
 
 
@@ -299,14 +307,22 @@ var connectArduino = function( daPath ) {
                             break;
                             case 1 :
                                 cs.sys_say( "location" );
-                                // test connecting to server via socket
-                                socketClient.emit( 'connect', { "ccdocuID" : "testdocu", "userID" : "CT0079" } );
+                                ccdocuID = "testdocu"
+                                // make HTTP request to download content of the document
+                                var daURL = fullServerAddress + '/ccd/' + ccdocuID;
+                                var  daqs = { 'userID' : userID, 'ccdocuID' : ccdocuID, 'devNum' : devNum };
+                                reqq.get( { url: daURL, form: daqs }, function (err, httpResponse, body) {
+                                    console.log( body );
+                                    // emit to session that content is loaded and ready to receive updates
+                                    socketClient.emit( 'cnect2ssn', { "ccdocuID" : "testdocu", "userID" : "CT0079" } );
+                                } );
                             break;
                             case 2 :
                                 cs.sys_say( "main" );
                             break;
                             case 3 :
                                 cs.sys_say( "chat" );
+                                socketClient.emit( 'konek', { "a" : "b" } );
                             break;
                             case 4 :
                                 cs.sys_say( "find" );
