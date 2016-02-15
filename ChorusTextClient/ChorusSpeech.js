@@ -25,29 +25,42 @@ var EventEmitter = require('events').EventEmitter;
 
 function ChorusSpeech() {
     var self = this;
-    var espeak;
+    var daTTS;
+    //espeak (default TTS for English and Indonesian)
+    var espeakSpLo = 25;
+    var espeakSpHi = 500;
     var speechRate = 350;
-    var speechRateChar = 100; // for slower char by char spelling
+    var speechRateChar = 100; // for slower char by char spelling    
+    // ekho (TTS onlyl for Chinese)
+    var ekhoSpLo = -50;
+    var ekhoSpHi = 100;
+    var ekhoSpeechRate = 0; //= this.mapToEkhoSpeed( speechRate );
+    var ekhoSpeechRateChar = 0;// = this.mapToEkhoSpeed( speechRateChar );
+
     var language = "en";
     var speechText = "";
     var speechPID;
     var langIndex = 0;
     var supportedLanguages = [ "English", "Indonesian", "Chinese" ]
     var ipAddress = "";
+    
 
 
     self.setRate = function( kind, val ) {
         val = parseInt( val );
         // boundary check
-        if( val > 500 )
-            val = 500;
-        if( val < 25 )
-            val = 25;
+        if( val > espeakSpHi )
+            val = espeakSpHi;
+        if( val < espeakSpLo )
+            val = espeakSpLo;
         // assignment
-        if( kind == "char" ) 
+        if( kind == "char" ) {
             speechRateChar = val;
-        else
+            ekhoSpeechRateChar = this.mapToEkhoSpeed( speechRateChar );
+        } else {
             speechRate = val;
+            ekhoSpeechRate = this.mapToEkhoSpeed( speechRate );
+        }
     };
 
 
@@ -114,6 +127,28 @@ function ChorusSpeech() {
     self.playAlert = function() {
         alrt = spawn( 'mplayer', [ './alerts/drip.ogg' ] );
     };
+    
+    
+    
+    
+    this.map = function( ipoint, ilow, ihigh, tlow, thigh ) {
+        var irange = Math.abs( ihigh - ilow );
+        var trange = Math.abs( thigh - tlow );
+        var ipct = (ipoint-ilow) / irange;
+        var tpct = (ipct * trange) + tlow;
+        return( Math.floor( tpct ) );
+    };
+    
+    
+    
+    
+    self.mapToEkhoSpeed = function( val ) {
+        return( self.map( val, espeakSpLo, espeakSpHi, ekhoSpLo, ekhoSpHi ) );
+    };
+    
+    
+    
+    
     self.say = function( theText, withPunctuation, callback ) {
         // experimental
         if( theText == " " ) {
@@ -124,31 +159,37 @@ function ChorusSpeech() {
             self.killSpeech( speechPID );
         }
     
-        // spawn espeak
-        speechText = theText;
-        if( withPunctuation )
-            espeak = spawn( 'espeak', [ '--punct', '-s'+speechRateChar, '-v'+language, speechText ] );
-        else
-            espeak = spawn( 'espeak', [ '-s'+speechRate, '-v'+language, speechText ] );    
-    
+        speechText = theText;        
+        // spawn either ekho or espeak
+        if( language === 'zh' ) {
+            // ekho
+            daTTS = spawn( 'ekho', [ '--speed='+ekhoSpeechRate, '"'+speechText+'"' ] );
+        } else {
+            // espeak
+            if( withPunctuation )
+                daTTS = spawn( 'espeak', [ '--punct', '-s'+speechRateChar, '-v'+language, speechText ] );
+            else
+                daTTS = spawn( 'espeak', [ '-s'+speechRate, '-v'+language, speechText ] );    
+        }
         // store its PID
-        speechPID = espeak.pid;
+        speechPID = daTTS.pid;
         console.log( speechPID + " : " + speechText );
 
 
 
-
         // handlers
-        espeak.stdout.on('data', function (data) {
+        daTTS.stdout.on('data', function (data) {
         // do nothing
         });
 
-        espeak.stderr.on( 'data', function( data ) {
+        daTTS.stderr.on( 'data', function( data ) {
         // do nothing
         } );
 
-        espeak.on( 'exit', function( code ) {  
+        daTTS.on( 'exit', function( code ) {  
             //speechPID = null;
+            if( code === 0 )
+                self.emit( 'doneSay' );
         } );
     
         if( callback )
